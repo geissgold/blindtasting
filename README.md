@@ -1,70 +1,74 @@
-# Getting Started with Create React App
+# Blind Tasting App 🍷
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple, elegant web app for hosting and participating in blind tasting events (wine, beer, coffee, and more).
 
-## Available Scripts
+**Live App:** [https://blind-tasting-app.web.app](https://blind-tasting-app.web.app)  
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Create a new tasting event** in seconds, set the number of items, and invite guests by QR code or link.
+- **Participants rate each item** using an intuitive slider and leave private notes.
+- **Host reveals results and item identities** after the tasting, with fun visualizations.
+- **Download results** as CSV for your records.
+- **Mobile-first, minimalist, and cloud-hosted.**
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## How To Use
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### **1. As Host**
 
-### `npm run build`
+- **Log in** with your Google account.
+- Click **“Create a New Tasting Event”**.
+- Enter a name for the tasting (optional) and the number of items.
+- After creating, **share the event code, join link, or QR code** with your tasters.
+- Once everyone has rated, go to **“My Tastings”** and select your event:
+  - Click **Manage** to see responses.
+  - Enter the real names of the items (e.g. “Wine A: Château Fancypants 2016”).
+  - **Click “Close Tasting”** to lock results and reveal them to all.
+  - Download full results as CSV if desired.
+- You can revisit or delete your tastings anytime from **My Tastings**.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### **2. As Participant**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Scan the QR code** or click the join link sent by the host.
+- Log in with your Google account.
+- **Rate each item** and add private notes if you wish.
+- You can submit ratings for as many items as you want, in any order.
+- When the host closes the tasting, you’ll see the final revealed results.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Frequently Asked Questions
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### **How do I share the event?**
+- The host can share a **code, link, or QR code** for easy joining.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### **Is my tasting data private?**
+- Only hosts can see all responses; participants can always see their own ratings.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### **Can I delete or revisit past tastings?**
+- Yes! Go to **My Tastings** to view, manage, or delete any event you’ve created.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### **Will this work on mobile?**
+- Yes. The app is fully responsive and works great on phones and tablets.
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Deployment/Development
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Built with React, Material UI, and Firebase (Firestore + Auth).
+- Easy to fork, run, and deploy via [Firebase Hosting](https://firebase.google.com/docs/hosting).
+- See the `/src` folder for main components and logic.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## License
 
-### Analyzing the Bundle Size
+MIT License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Cheers and happy tasting! 🍷**
