@@ -8,8 +8,11 @@ import { auth, provider, db } from "./firebase";
 import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { QRCodeCanvas } from "qrcode.react";
+import { useNavigate } from "react-router-dom";
+
 
 function Home() {
+  const navigate = useNavigate();
   const [tastingName, setTastingName] = useState("");
   const [user, setUser] = useState(null);
   const [creating, setCreating] = useState(false);
