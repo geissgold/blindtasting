@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./Home";
 import JoinTasting from "./JoinTasting";
 import Results from "./Results";
+import FinalResults from "./FinalResults";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/join/:tastingId" element={<JoinTasting />} />
         <Route path="/results/:tastingId" element={<Results />} />
+        <Route path="/final/:tastingId" element={<FinalResults />} />
       </Routes>
     </Router>
   );

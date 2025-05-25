@@ -8,7 +8,6 @@ import {
   collection,
   getDocs,
   updateDoc,
-  serverTimestamp
 } from "firebase/firestore";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -18,6 +17,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
+import Link from "@mui/material/Link";
 
 function Results() {
   const { tastingId } = useParams();
@@ -28,7 +28,9 @@ function Results() {
   const [savingNames, setSavingNames] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notCreator, setNotCreator] = useState(false);
+  const [justClosed, setJustClosed] = useState(false);
 
+  // Auth listener
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
@@ -37,36 +39,39 @@ function Results() {
   }, []);
 
   // Fetch tasting + responses
-  useEffect(() => {
-    async function fetchAll() {
-      try {
-        const docRef = doc(db, "tastings", tastingId);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-          setTasting(null);
-          setLoading(false);
-          return;
-        }
-        const data = docSnap.data();
-        setTasting({ ...data, id: docSnap.id });
-
-        // Item names
-        setItemNames(data.itemNames || Array(data.numItems).fill(""));
-
-        // Responses
-        const responsesCol = collection(db, "tastings", tastingId, "responses");
-        const responsesSnap = await getDocs(responsesCol);
-        setResponses(
-          responsesSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
-        );
-      } catch (err) {
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const docRef = doc(db, "tastings", tastingId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
         setTasting(null);
-      } finally {
         setLoading(false);
+        return;
       }
+      const data = docSnap.data();
+      setTasting({ ...data, id: docSnap.id });
+
+      // Item names
+      setItemNames(data.itemNames || Array(data.numItems).fill(""));
+
+      // Responses
+      const responsesCol = collection(db, "tastings", tastingId, "responses");
+      const responsesSnap = await getDocs(responsesCol);
+      setResponses(
+        responsesSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      );
+    } catch (err) {
+      setTasting(null);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchAll();
-  }, [tastingId, savingNames]);
+    // eslint-disable-next-line
+  }, [tastingId, savingNames, justClosed]);
 
   // Only allow creator
   useEffect(() => {
@@ -92,6 +97,17 @@ function Results() {
     setSavingNames(false);
   };
 
+  const handleCloseTasting = async () => {
+    try {
+      await updateDoc(doc(db, "tastings", tastingId), { status: "closed" });
+      setJustClosed(true);
+      setTimeout(() => setJustClosed(false), 2000); // Reset after feedback
+      fetchAll(); // Refresh tasting status/results
+    } catch (err) {
+      alert("Error closing tasting: " + err.message);
+    }
+  };
+
   // Tabulate results
   function computeResults() {
     if (!responses.length || !tasting) return [];
@@ -101,15 +117,19 @@ function Results() {
       avg:
         responses
           .map((r) => r.ratings?.[idx] ?? null)
-          .filter((v) => v !== null && v !== undefined).reduce((a, b) => a + b, 0) /
-        responses.filter((r) => r.ratings?.[idx] !== null && r.ratings?.[idx] !== undefined).length || 0,
+          .filter((v) => v !== null && v !== undefined)
+          .reduce((a, b) => a + b, 0) /
+          responses.filter((r) => r.ratings?.[idx] !== null && r.ratings?.[idx] !== undefined).length || 0,
       votes: responses.filter((r) => r.ratings?.[idx] !== null && r.ratings?.[idx] !== undefined).length,
     }));
     return items.sort((a, b) => b.avg - a.avg); // Highest avg first
   }
 
-  const chartData = computeResults().map(item => ({
-    name: item.name || `Item ${item.number}`,
+  const results = computeResults();
+  const topItemName = results.length ? results[0].name : "";
+
+  const chartData = results.map(item => ({
+    name: (item.name === topItemName ? `🏆 ${item.name}` : item.name) || `Item ${item.number}`,
     Average: Number(item.avg.toFixed(2)),
     Votes: item.votes,
     number: item.number,
@@ -206,6 +226,25 @@ function Results() {
           <Typography>No responses yet.</Typography>
         )}
       </Box>
+      {tasting.status !== "closed" && (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleCloseTasting}
+          sx={{ my: 2 }}
+        >
+          Close Tasting & Reveal Results
+        </Button>
+      )}
+      {(tasting.status === "closed" || justClosed) && (
+        <Alert severity="success" sx={{ my: 2 }}>
+          This tasting is <b>closed</b>. All participants can now view and download the final results!
+          <br />
+          <Link href={`/final/${tastingId}`} target="_blank" rel="noopener">
+            View Final Results &rarr;
+          </Link>
+        </Alert>
+      )}
     </Container>
   );
 }
