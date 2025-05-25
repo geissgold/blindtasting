@@ -1,10 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import Home from "./Home";
 import JoinTasting from "./JoinTasting";
 import Results from "./Results";
@@ -35,7 +37,7 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: `"Inter", "Helvetica Neue", Arial, sans-serif`,
-    h4: { fontWeight: 600 },
+    h4: { fontWeight: 700 },
     h5: { fontWeight: 500 },
     button: { textTransform: "none" }
   },
@@ -58,47 +60,97 @@ const theme = createTheme({
   }
 });
 
+function ResponsiveHeader() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  return (
+    <Box
+      sx={{
+        py: isMobile ? 2 : 3,
+        mb: isMobile ? 2 : 4,
+        background: "#fff",
+        boxShadow: "0 2px 8px 0 rgba(40,53,147,0.03)",
+        borderBottom: "1px solid #e0e3e7"
+      }}
+    >
+      <Container maxWidth="md">
+        <Stack
+          direction={isMobile ? "column" : "row"}
+          alignItems={isMobile ? "flex-start" : "center"}
+          justifyContent="space-between"
+          spacing={isMobile ? 1 : 0}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: "primary.main",
+              letterSpacing: "-1px",
+              display: "flex",
+              alignItems: "center",
+              fontSize: isMobile ? "2rem" : "2.5rem"
+            }}
+          >
+            <span
+              role="img"
+              aria-label="wine"
+              style={{
+                fontSize: isMobile ? "2rem" : "2.2rem",
+                marginRight: isMobile ? 8 : 12,
+                marginBottom: isMobile ? 0 : 4
+              }}
+            >
+              🍷
+            </span>
+            Blind Tasting
+          </Typography>
+          <Box
+            sx={{
+              mt: isMobile ? 1 : 0,
+              ml: isMobile ? 0 : 2,
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "flex-start" : "center"
+            }}
+          >
+            <Link
+              to="/"
+              style={{
+                textDecoration: "none",
+                color: "#283593",
+                marginRight: isMobile ? 0 : 18,
+                fontWeight: 500,
+                marginBottom: isMobile ? 4 : 0,
+                fontSize: "1.07rem"
+              }}
+            >
+              Home
+            </Link>
+            <Link
+              to="/my-tastings"
+              style={{
+                textDecoration: "none",
+                color: "#283593",
+                fontWeight: 500,
+                fontSize: "1.07rem"
+              }}
+            >
+              My Tastings
+            </Link>
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {/* Minimal header, always visible */}
-        <Box
-          sx={{
-            py: 3,
-            mb: 4,
-            background: "#fff",
-            boxShadow: "0 2px 8px 0 rgba(40,53,147,0.03)",
-            borderBottom: "1px solid #e0e3e7"
-          }}
-        >
-          <Container maxWidth="md">
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 700,
-                  color: "primary.main",
-                  letterSpacing: "-1px"
-                }}
-              >
-                Blind Tasting <span role="img" aria-label="cheers">🍷</span>
-              </Typography>
-              <Box>
-                {/* Minimal navigation, add more as needed */}
-                <Link to="/" style={{ textDecoration: "none", color: "#283593", marginRight: 18, fontWeight: 500 }}>
-                  Home
-                </Link>
-                <Link to="/my-tastings" style={{ textDecoration: "none", color: "#283593", fontWeight: 500 }}>
-                  My Tastings
-                </Link>
-              </Box>
-            </Box>
-          </Container>
-        </Box>
-
-        {/* Main page content */}
+        <ResponsiveHeader />
         <Container maxWidth="md">
           <Routes>
             <Route path="/" element={<Home />} />
