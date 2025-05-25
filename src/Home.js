@@ -87,6 +87,9 @@ function Home() {
             <Button variant="outlined" color="secondary" onClick={handleLogout}>
               Sign Out
             </Button>
+            <Button variant="text" onClick={() => navigate("/my-tastings")}>
+              My Tastings
+            </Button>
             <Box mt={4}>
               <Typography variant="h5">Create a New Tasting Event</Typography>
               <TextField
