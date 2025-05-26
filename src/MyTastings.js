@@ -1,6 +1,6 @@
 // src/MyTastings.js
 import React, { useEffect, useState } from "react";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "./firebase";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
@@ -232,7 +232,7 @@ function MyTastings() {
                 </a>
                 </Typography>
                 <Box sx={{ my: 2 }}>
-                <QRCode value={`${window.location.origin}/join/${qrTasting.id}`} size={170} />
+                <QRCodeCanvas value={`${window.location.origin}/join/${qrTasting.id}`} size={170} />
                 </Box>
             </>
             )}
