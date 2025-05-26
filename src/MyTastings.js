@@ -1,5 +1,6 @@
 // src/MyTastings.js
 import React, { useEffect, useState } from "react";
+import QRCode from "qrcode.react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "./firebase";
 import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
@@ -28,8 +29,20 @@ function MyTastings() {
   const [error, setError] = useState("");
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [qrOpen, setQROpen] = useState(false);
+  const [qrTasting, setQRTasting] = useState(null);
 
   const navigate = useNavigate();
+
+  const handleShowQR = (tasting) => {
+    setQRTasting(tasting);
+    setQROpen(true);
+  };
+  
+  const handleCloseQR = () => {
+    setQROpen(false);
+    setQRTasting(null);
+  };  
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
@@ -133,6 +146,16 @@ function MyTastings() {
                   </TableCell>
                   <TableCell>{row.numItems}</TableCell>
                   <TableCell>
+                    {row.status !== "closed" && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleShowQR(row)}
+                      sx={{ mr: 1 }}
+                    >
+                    Show QR
+                    </Button>
+                    )}
                     <Button
                       size="small"
                       onClick={() => navigate(`/results/${row.id}`)}
@@ -188,6 +211,37 @@ function MyTastings() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog open={qrOpen} onClose={handleCloseQR}>
+        <DialogTitle>Share This Tasting</DialogTitle>
+        <DialogContent sx={{ textAlign: "center" }}>
+            {qrTasting && (
+            <>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                Event Code:<br />
+                <b>{qrTasting.id}</b>
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                Or join link:<br />
+                <a
+                    href={`${window.location.origin}/join/${qrTasting.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ wordBreak: "break-all" }}
+                >
+                    {`${window.location.origin}/join/${qrTasting.id}`}
+                </a>
+                </Typography>
+                <Box sx={{ my: 2 }}>
+                <QRCode value={`${window.location.origin}/join/${qrTasting.id}`} size={170} />
+                </Box>
+            </>
+            )}
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleCloseQR}>Close</Button>
+        </DialogActions>
+     </Dialog>
+
     </Container>
   );
 }
