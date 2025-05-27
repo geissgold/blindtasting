@@ -11,6 +11,7 @@ import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
+import Fade from "@mui/material/Fade";
 
 function JoinTasting() {
   const { tastingId } = useParams();
@@ -21,9 +22,10 @@ function JoinTasting() {
   const [notes, setNotes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // 1. Track login state
+  // Track login state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
@@ -31,7 +33,7 @@ function JoinTasting() {
     return () => unsub();
   }, []);
 
-  // 2. Fetch tasting *only if* user is signed in
+  // Fetch tasting only if user is signed in
   useEffect(() => {
     if (!user) {
       setNeedsSignIn(true);
@@ -70,7 +72,17 @@ function JoinTasting() {
     // eslint-disable-next-line
   }, [user, tastingId]);
 
-  // 3. Show login prompt instead of not found error
+  // Fade-out for the saved message
+  useEffect(() => {
+    let timer;
+    if (saved) {
+      setShowSaved(true);
+      timer = setTimeout(() => setShowSaved(false), 3000); // 3 seconds
+    }
+    return () => clearTimeout(timer);
+  }, [saved]);
+
+  // Show login prompt instead of not found error
   if (needsSignIn) {
     return (
       <Container>
@@ -148,6 +160,17 @@ function JoinTasting() {
       <Typography>
         Hello <b>{user.displayName}</b>! There are <b>{tasting.numItems}</b> items to taste.
       </Typography>
+
+      <Fade in={showSaved} timeout={{ enter: 300, exit: 500 }}>
+        <Box>
+          {showSaved && (
+            <Alert severity="success" sx={{ my: 3 }}>
+              Your ratings and notes have been saved!
+            </Alert>
+          )}
+        </Box>
+      </Fade>
+
       <Box mt={3}>
         {Array.from({ length: tasting.numItems }).map((_, idx) => (
           <Box key={idx} my={4} p={2} border={1} borderRadius={2} borderColor="grey.300">
@@ -188,11 +211,6 @@ function JoinTasting() {
           {saving ? "Saving..." : "Save My Ratings"}
         </Button>
       </Box>
-      {saved && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          Your ratings and notes have been saved!
-        </Alert>
-      )}
     </Container>
   );
 }
