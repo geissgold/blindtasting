@@ -1,6 +1,6 @@
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { db, auth } from "./firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import Container from "@mui/material/Container";
@@ -14,16 +14,16 @@ import Alert from "@mui/material/Alert";
 
 function JoinTasting() {
   const { tastingId } = useParams();
+  const [user, setUser] = useState(null);
   const [tasting, setTasting] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [notes, setNotes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [autoSignInAttempted, setAutoSignInAttempted] = useState(false);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // Get signed-in user
+  // 1. Track login state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
@@ -31,66 +31,47 @@ function JoinTasting() {
     return () => unsub();
   }, []);
 
-  // Try to auto-sign-in if not already signed in, but only once
+  // 2. Fetch tasting *only if* user is signed in
   useEffect(() => {
-    if (!user && !autoSignInAttempted) {
-      const provider = new GoogleAuthProvider();
-      signInWithPopup(auth, provider).catch(() => {});
-      setAutoSignInAttempted(true);
+    if (!user) {
+      setNeedsSignIn(true);
+      setLoading(false);
+      return;
     }
-  }, [user, autoSignInAttempted]);
+    setNeedsSignIn(false);
+    setLoading(true);
 
-  // Fetch tasting info
-  useEffect(() => {
     async function fetchTasting() {
       try {
         const docRef = doc(db, "tastings", tastingId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setTasting(docSnap.data());
+          const data = docSnap.data();
+          setTasting(data);
+          // Optionally fetch user's existing ratings
+          const responseRef = doc(db, "tastings", tastingId, "responses", user.uid);
+          const responseSnap = await getDoc(responseRef);
+          if (responseSnap.exists()) {
+            setRatings(responseSnap.data().ratings || Array(data.numItems).fill(5));
+            setNotes(responseSnap.data().notes || Array(data.numItems).fill(""));
+          } else {
+            setRatings(Array(data.numItems).fill(5));
+            setNotes(Array(data.numItems).fill(""));
+          }
         } else {
           setTasting(null);
         }
       } catch (error) {
         setTasting(null);
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     }
     fetchTasting();
-  }, [tastingId]);
-
-  // Fetch user's existing responses if any
-  useEffect(() => {
-    async function fetchResponse() {
-      if (!user || !tasting) return;
-      const responseRef = doc(db, "tastings", tastingId, "responses", user.uid);
-      const responseSnap = await getDoc(responseRef);
-      if (responseSnap.exists()) {
-        const data = responseSnap.data();
-        setRatings(data.ratings || Array(tasting.numItems).fill(5));
-        setNotes(data.notes || Array(tasting.numItems).fill(""));
-      } else {
-        setRatings(Array(tasting.numItems).fill(5));
-        setNotes(Array(tasting.numItems).fill(""));
-      }
-    }
-    fetchResponse();
     // eslint-disable-next-line
-  }, [user, tasting]);
+  }, [user, tastingId]);
 
-  if (loading) return <Container><CircularProgress /></Container>;
-  if (!tasting) {
-    return (
-      <Container>
-        <Typography variant="h5" color="error">
-          Tasting not found!
-        </Typography>
-      </Container>
-    );
-  }
-
-  if (!user) {
+  // 3. Show login prompt instead of not found error
+  if (needsSignIn) {
     return (
       <Container>
         <Alert severity="info" sx={{ my: 4 }}>
@@ -109,8 +90,25 @@ function JoinTasting() {
       </Container>
     );
   }
-  
 
+  if (loading)
+    return (
+      <Container>
+        <CircularProgress sx={{ my: 4 }} />
+      </Container>
+    );
+
+  if (!tasting) {
+    return (
+      <Container>
+        <Typography variant="h5" color="error" sx={{ my: 4 }}>
+          Tasting not found!
+        </Typography>
+      </Container>
+    );
+  }
+
+  // ------- Rating UI below -------
   const handleSliderChange = (idx, value) => {
     const newRatings = [...ratings];
     newRatings[idx] = value;
