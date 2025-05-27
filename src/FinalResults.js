@@ -6,11 +6,16 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { QRCodeCanvas } from "qrcode.react";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Alert from "@mui/material/Alert";
+import { QRCodeCanvas } from "qrcode.react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
 
 function FinalResults() {
@@ -19,6 +24,7 @@ function FinalResults() {
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     async function fetchAll() {
@@ -48,7 +54,6 @@ function FinalResults() {
     fetchAll();
   }, [tastingId]);
 
-  // Copy feedback
   useEffect(() => {
     if (copySuccess) {
       const timer = setTimeout(() => setCopySuccess(false), 2000);
@@ -56,7 +61,7 @@ function FinalResults() {
     }
   }, [copySuccess]);
 
-  // Tabulate results
+  // Tabulate results for chart and CSV
   function computeResults() {
     if (!responses.length || !tasting) return [];
     const items = Array.from({ length: tasting.numItems }, (_, idx) => ({
@@ -78,6 +83,30 @@ function FinalResults() {
     Votes: item.votes,
     number: item.number,
   }));
+
+  // --- CSV download ---
+  const handleDownloadCSV = () => {
+    const csvHeader = ["Item Number", "Item Name", "Average Rating", "Votes"];
+    const csvRows = computeResults().map(item =>
+      [
+        item.number,
+        `"${item.name.replace(/"/g, '""')}"`,
+        item.avg.toFixed(2),
+        item.votes
+      ].join(",")
+    );
+    const csv = [csvHeader.join(","), ...csvRows].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `tasting-results-${tasting.name || tasting.id}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -101,40 +130,49 @@ function FinalResults() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
+      {/* SHARE FINAL RESULTS */}
       <Box sx={{ textAlign: "center", mb: 4 }}>
-        <Typography variant="h5" sx={{ mb: 1 }}>
+        <Button variant="outlined" color="primary" onClick={() => setShareOpen(true)}>
           Share Final Results
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <QRCodeCanvas value={shareLink} size={160} />
-          <Box sx={{ mt: 2, mb: 1, display: "flex", alignItems: "center" }}>
-            <Typography
-              variant="body2"
-              sx={{ wordBreak: "break-all", mr: 1, color: "primary.main" }}
-            >
-              {shareLink}
-            </Typography>
-            <Tooltip title="Copy link">
-              <IconButton
-                size="small"
-                onClick={() => {
-                  navigator.clipboard.writeText(shareLink);
-                  setCopySuccess(true);
-                }}
+        </Button>
+        <Dialog open={shareOpen} onClose={() => setShareOpen(false)}>
+          <DialogTitle>Share Final Results</DialogTitle>
+          <DialogContent sx={{ textAlign: "center" }}>
+            <QRCodeCanvas value={shareLink} size={160} />
+            <Box sx={{ mt: 2, mb: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Typography
+                variant="body2"
+                sx={{ wordBreak: "break-all", mr: 1, color: "primary.main" }}
               >
-                <ContentCopyIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-          {copySuccess && (
-            <Alert severity="success" sx={{ my: 2, px: 3, py: 1 }}>
-              Link copied to clipboard!
-            </Alert>
-          )}
-          <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            Anyone with this code or link can view the final results.
-          </Typography>
-        </Box>
+                {shareLink}
+              </Typography>
+              <Tooltip title="Copy link">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareLink);
+                    setCopySuccess(true);
+                  }}
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            {copySuccess && (
+              <Alert severity="success" sx={{ my: 2, px: 3, py: 1 }}>
+                Link copied to clipboard!
+              </Alert>
+            )}
+            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+              Anyone with this code or link can view the final results.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShareOpen(false)} autoFocus>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
 
       <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
@@ -143,6 +181,13 @@ function FinalResults() {
       <Typography variant="subtitle1" sx={{ mb: 1, textAlign: "center" }}>
         {tasting.numItems} items &middot; Created on {tasting.createdAt?.toDate?.().toLocaleDateString() || ""}
       </Typography>
+
+      <Box mt={2} mb={4} sx={{ textAlign: "center" }}>
+        <Button variant="outlined" onClick={handleDownloadCSV}>
+          Download CSV
+        </Button>
+      </Box>
+
       <Box mt={5}>
         <Typography variant="h5" gutterBottom>
           Results Visualization
