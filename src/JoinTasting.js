@@ -7,6 +7,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
 import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -25,7 +26,6 @@ function JoinTasting() {
   const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // Track login state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
@@ -33,7 +33,6 @@ function JoinTasting() {
     return () => unsub();
   }, []);
 
-  // Fetch tasting only if user is signed in
   useEffect(() => {
     if (!user) {
       setNeedsSignIn(true);
@@ -72,17 +71,15 @@ function JoinTasting() {
     // eslint-disable-next-line
   }, [user, tastingId]);
 
-  // Fade-out for the saved message
   useEffect(() => {
     let timer;
     if (saved) {
       setShowSaved(true);
-      timer = setTimeout(() => setShowSaved(false), 3000); // 3 seconds
+      timer = setTimeout(() => setShowSaved(false), 3000);
     }
     return () => clearTimeout(timer);
   }, [saved]);
 
-  // Show login prompt instead of not found error
   if (needsSignIn) {
     return (
       <Container>
@@ -153,30 +150,44 @@ function JoinTasting() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Blind Tasting: Rate Each Item
+    <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 6 }, mb: 4 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+        Blind Tasting
       </Typography>
-      <Typography>
-        Hello <b>{user.displayName}</b>! There are <b>{tasting.numItems}</b> items to taste.
+      <Typography sx={{ mb: 2 }}>
+        Hi <b>{user.displayName}</b>! Please rate the {tasting.numItems} items.
       </Typography>
 
       <Fade in={showSaved} timeout={{ enter: 300, exit: 500 }}>
         <Box>
           {showSaved && (
-            <Alert severity="success" sx={{ my: 3 }}>
+            <Alert severity="success" sx={{ my: 2 }}>
               Your ratings and notes have been saved!
             </Alert>
           )}
         </Box>
       </Fade>
 
-      <Box mt={3}>
+      <Box sx={{ mt: 2 }}>
         {Array.from({ length: tasting.numItems }).map((_, idx) => (
-          <Box key={idx} my={4} p={2} border={1} borderRadius={2} borderColor="grey.300">
-            <Typography variant="h6">Item {idx + 1}</Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <Typography sx={{ minWidth: 100 }}>Rating:</Typography>
+          <Paper
+            key={idx}
+            elevation={2}
+            sx={{
+              my: 2,
+              p: 2,
+              borderRadius: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+              background: "#fafbfc"
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+              Item {idx + 1}
+            </Typography>
+            <Box display="flex" alignItems="center" gap={2} sx={{ mb: 1 }}>
+              <Typography sx={{ minWidth: 70 }}>Rating:</Typography>
               <Slider
                 value={ratings[idx] || 5}
                 min={1}
@@ -185,28 +196,31 @@ function JoinTasting() {
                 marks
                 valueLabelDisplay="auto"
                 onChange={(_, value) => handleSliderChange(idx, value)}
-                sx={{ width: 180, mx: 2 }}
+                sx={{ width: 150, mx: 1 }}
               />
               <Typography>{ratings[idx] || 5}</Typography>
             </Box>
             <TextField
               label="Your notes (private)"
               multiline
-              fullWidth
               minRows={2}
+              maxRows={4}
+              fullWidth
               value={notes[idx] || ""}
               onChange={(e) => handleNotesChange(idx, e.target.value)}
-              sx={{ mt: 1 }}
+              size="small"
+              sx={{ mt: 0.5 }}
             />
-          </Box>
+          </Paper>
         ))}
       </Box>
-      <Box mt={3} display="flex" justifyContent="center">
+      <Box mt={2} display="flex" justifyContent="center">
         <Button
           variant="contained"
           color="primary"
           onClick={handleSave}
           disabled={saving}
+          sx={{ borderRadius: 2, fontWeight: 600, minWidth: 160 }}
         >
           {saving ? "Saving..." : "Save My Ratings"}
         </Button>
