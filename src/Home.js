@@ -75,7 +75,7 @@ function Home() {
 
   return (
     <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 8 }, mb: 8 }}>
-      <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 4 }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
         <Box>
           {!user ? (
             <Box sx={{ textAlign: "center", py: 6 }}>
