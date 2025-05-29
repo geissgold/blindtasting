@@ -71,7 +71,8 @@ function Home() {
     }
   };
 
-  const tastingLink = createdTasting ? `${window.location.origin}/join/${createdTasting}` : "";
+  const tastingLink = createdTasting ? `https://tasting.hallofmirth.us/join/${createdTasting}` : "";
+
 
   return (
     <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 8 }, mb: 8 }}>

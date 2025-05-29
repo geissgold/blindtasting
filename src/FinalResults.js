@@ -126,7 +126,8 @@ function FinalResults() {
   }
 
   // --- FinalResults UI ---
-  const shareLink = `${window.location.origin}/final/${tasting.id}`;
+  const shareLink = `https://tasting.hallofmirth.us/final/${tastingId}`;
+
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>

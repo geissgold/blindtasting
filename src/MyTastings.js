@@ -223,16 +223,17 @@ function MyTastings() {
                 <Typography variant="body2" sx={{ mb: 2 }}>
                 Or join link:<br />
                 <a
-                    href={`${window.location.origin}/join/${qrTasting.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ wordBreak: "break-all" }}
+                  href={`https://tasting.hallofmirth.us/join/${qrTasting.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ wordBreak: "break-all" }}
                 >
-                    {`${window.location.origin}/join/${qrTasting.id}`}
+                {`https://tasting.hallofmirth.us/join/${qrTasting.id}`}
                 </a>
+
                 </Typography>
                 <Box sx={{ my: 2 }}>
-                <QRCodeCanvas value={`${window.location.origin}/join/${qrTasting.id}`} size={170} />
+                <QRCodeCanvas value={`https://tasting.hallofmirth.us/join/${qrTasting.id}`} size={170} />
                 </Box>
             </>
             )}
