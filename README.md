@@ -1,74 +1,83 @@
 # Blind Tasting App 🍷
 
-A simple, elegant web app for hosting and participating in blind tasting events (wine, beer, coffee, and more).
-
-**Live App:** [https://blind-tasting-app.web.app](https://blind-tasting-app.web.app)  
-
----
+A simple, elegant web app for running blind tastings—designed for wine, coffee, spirits, or anything you want to rate as a group.  
+**Live App:** [https://tasting.hallofmirth.us](https://tasting.hallofmirth.us)
 
 ## Features
 
-- **Create a new tasting event** in seconds, set the number of items, and invite guests by QR code or link.
-- **Participants rate each item** using an intuitive slider and leave private notes.
-- **Host reveals results and item identities** after the tasting, with fun visualizations.
-- **Download results** as CSV for your records.
-- **Mobile-first, minimalist, and cloud-hosted.**
+- Create a new tasting event, set the number of items, and instantly get a join code + QR code.
+- Participants rate each item on a scale (with private notes).
+- Host sees results, can add item names for the “reveal,” and can download data.
+- Participants can also download their results.
+- Google sign-in for privacy and simplicity.
+- Works perfectly on mobile or desktop.
 
 ---
 
-## How To Use
+## How to Use
 
-### **1. As Host**
+### 1. Host: Start a New Tasting
 
-- **Log in** with your Google account.
-- Click **“Create a New Tasting Event”**.
-- Enter a name for the tasting (optional) and the number of items.
-- After creating, **share the event code, join link, or QR code** with your tasters.
-- Once everyone has rated, go to **“My Tastings”** and select your event:
-  - Click **Manage** to see responses.
-  - Enter the real names of the items (e.g. “Wine A: Château Fancypants 2016”).
-  - **Click “Close Tasting”** to lock results and reveal them to all.
-  - Download full results as CSV if desired.
-- You can revisit or delete your tastings anytime from **My Tastings**.
+1. Go to [https://tasting.hallofmirth.us](https://tasting.hallofmirth.us) and sign in with Google.
+2. Enter a name for your tasting and the number of items to be rated.
+3. Click **Create**.  
+   - You’ll get a unique code, a join link (e.g., `https://tasting.hallofmirth.us/join/ABC123`), and a QR code.
+4. **Share the code, link, or QR code** with your tasters (they just scan or tap to join).
 
-### **2. As Participant**
+### 2. Tasters: Join and Rate
 
-- **Scan the QR code** or click the join link sent by the host.
-- Log in with your Google account.
-- **Rate each item** and add private notes if you wish.
-- You can submit ratings for as many items as you want, in any order.
-- When the host closes the tasting, you’ll see the final revealed results.
+1. Visit the link or scan the QR code (works on any phone).
+2. Sign in with Google.
+3. Rate each item and add private notes if you wish.
+4. Click **Save My Ratings** at any time.  
+   - You can come back and edit until the host closes the tasting.
 
----
+### 3. Host: Reveal & Results
 
-## Frequently Asked Questions
+1. When everyone’s done, go to the event’s results page (from “My Tastings”).
+2. Add item names for the reveal (optional, but fun!).
+3. **Close the tasting** to finalize results.
+4. Download results as CSV, or share the results link or QR code for participants.
 
-### **How do I share the event?**
-- The host can share a **code, link, or QR code** for easy joining.
+### 4. Participants: Download Results
 
-### **Is my tasting data private?**
-- Only hosts can see all responses; participants can always see their own ratings.
-
-### **Can I delete or revisit past tastings?**
-- Yes! Go to **My Tastings** to view, manage, or delete any event you’ve created.
-
-### **Will this work on mobile?**
-- Yes. The app is fully responsive and works great on phones and tablets.
+- After the host closes the tasting, you can revisit the event link to see and download the final results.
 
 ---
 
-## Deployment/Development
+## FAQ
 
-- Built with React, Material UI, and Firebase (Firestore + Auth).
-- Easy to fork, run, and deploy via [Firebase Hosting](https://firebase.google.com/docs/hosting).
-- See the `/src` folder for main components and logic.
+### Can I use the app for coffee, spirits, or other things?
+
+> Yes—just name your event accordingly.
+
+### Are my ratings private?
+
+> Only you and the host can see your ratings; your notes are never public.
+
+### What if I lose the link?
+
+> Ask your host to get the QR code or link again from the “My Tastings” menu.
+
+### Can I delete or revisit past tastings?
+
+> Yes! Go to **My Tastings** to view, manage, or delete any event you’ve created.
+
+### Will this work on mobile?
+
+> Yes. The app is fully responsive and works great on phones and tablets.
+---
+
+## For Developers
+
+- This app is built with React, Material UI, Firebase Hosting, Firestore, and Firebase Auth.
+- To run locally, clone the repo, add your own Firebase config, and run `npm install && npm start`.
 
 ---
 
 ## License
 
-MIT License
+MIT License. See LICENSE file.
 
----
 
 **Cheers and happy tasting! 🍷**
