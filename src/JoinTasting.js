@@ -151,8 +151,9 @@ function JoinTasting() {
 
   return (
     <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 6 }, mb: 4 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-        Blind Tasting
+      {/* Tasting Name at top, then subtitle */}
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+        {tasting.name ? tasting.name : "Blind Tasting"}
       </Typography>
       <Typography sx={{ mb: 2 }}>
         Hi <b>{user.displayName}</b>! Please rate the {tasting.numItems} items.
