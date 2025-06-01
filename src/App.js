@@ -27,10 +27,10 @@ const theme = createTheme({
     secondary: {
       main: "#ff7043",
     },
-    text: {
-      primary: "#f8f9fa",  // Optionally lighten the main text on dark bg
-      secondary: "#bbb",   // Softer secondary text
-    },
+    //text: {
+    //  primary: "#f8f9fa",  // Optionally lighten the main text on dark bg
+    //  secondary: "#bbb",   // Softer secondary text
+    //},
   },  
   shape: {
     borderRadius: 14,
