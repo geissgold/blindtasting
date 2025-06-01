@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { ThemeProvider, createTheme, useTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, CssBaseline, useTheme } from "@mui/material";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -12,63 +11,9 @@ import JoinTasting from "./JoinTasting";
 import Results from "./Results";
 import FinalResults from "./FinalResults";
 import MyTastings from "./MyTastings";
+import { lightTheme, darkTheme } from "./themes"; // <-- import your themes
 
-// ---- Custom Minimalist Theme ----
-const theme = createTheme({
-  palette: {
-    mode: "light",
-    background: {
-      default: "#23272e",  // deep gray app background
-      paper: "#fff"        // cards, tables, dialogs remain white
-    },
-    primary: {
-      main: "#283593",     // indigo
-    },
-    secondary: {
-      main: "#ff7043",     // orange
-    },
-    text: {
-      primary: "#18181a",      // dark, always readable inside cards
-      secondary: "#43444c",    // for softer/lighter bits
-    },
-  },
-  shape: {
-    borderRadius: 14,
-  },
-  typography: {
-    fontFamily: `"Inter", "Helvetica Neue", Arial, sans-serif`,
-    h4: { fontWeight: 700, color: "#18181a" }, // make headings extra clear
-    h5: { fontWeight: 500, color: "#18181a" },
-    button: { textTransform: "none" },
-    body1: { color: "#18181a" },
-    body2: { color: "#18181a" }
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { borderRadius: 14, boxShadow: "none", fontWeight: 500 }
-      }
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: { borderRadius: 18, color: "#18181a" }
-      }
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        root: { color: "#18181a", fontWeight: 500 }
-      }
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: { marginBottom: 20, color: "#18181a" }
-      }
-    }
-  }
-});
-
-
-function ResponsiveHeader() {
+function ResponsiveHeader({ darkMode, setDarkMode }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -77,9 +22,9 @@ function ResponsiveHeader() {
       sx={{
         py: isMobile ? 2 : 3,
         mb: isMobile ? 2 : 4,
-        background: "#fff",
+        background: theme.palette.background.paper,
         boxShadow: "0 2px 8px 0 rgba(40,53,147,0.03)",
-        borderBottom: "1px solid #e0e3e7"
+        borderBottom: `1px solid ${theme.palette.divider}`
       }}
     >
       <Container maxWidth="md">
@@ -126,7 +71,7 @@ function ResponsiveHeader() {
               to="/"
               style={{
                 textDecoration: "none",
-                color: "#283593",
+                color: theme.palette.primary.main,
                 marginRight: isMobile ? 0 : 18,
                 fontWeight: 500,
                 marginBottom: isMobile ? 4 : 0,
@@ -139,13 +84,29 @@ function ResponsiveHeader() {
               to="/my-tastings"
               style={{
                 textDecoration: "none",
-                color: "#283593",
+                color: theme.palette.primary.main,
                 fontWeight: 500,
                 fontSize: "1.07rem"
               }}
             >
               My Tastings
             </Link>
+            {/* Toggle theme button */}
+            <button
+              style={{
+                marginLeft: isMobile ? 0 : 18,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: theme.palette.primary.main,
+                fontSize: 22
+              }}
+              onClick={() => setDarkMode((d) => !d)}
+              aria-label="Toggle dark mode"
+              title="Toggle dark/light mode"
+            >
+              {darkMode ? "🌙" : "☀️"}
+            </button>
           </Box>
         </Stack>
       </Container>
@@ -154,11 +115,17 @@ function ResponsiveHeader() {
 }
 
 function App() {
+  // Prefer system mode, default to light
+  const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
+  const [darkMode, setDarkMode] = useState(prefersDark);
+
+  const theme = useMemo(() => (darkMode ? darkTheme : lightTheme), [darkMode]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <ResponsiveHeader />
+        <ResponsiveHeader darkMode={darkMode} setDarkMode={setDarkMode} />
         <Container maxWidth="md">
           <Routes>
             <Route path="/" element={<Home />} />
