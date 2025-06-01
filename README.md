@@ -18,7 +18,7 @@ A simple, elegant web app for running blind tastings—designed for wine, coffee
 
 ### 1. Host: Start a New Tasting
 
-1. Go to [https://tasting.hallofmirth.us](https://tasting.hallofmirth.us) and sign in with Google.
+1. Go to [https://tasting.hallofmirth.us](https://tasting.hallofmirth.us) and sign in with Google. *It is recommended that all participants log in on this screen first to avoid issues with stale logins etc...*
 2. Enter a name for your tasting and the number of items to be rated.
 3. Click **Create**.  
    - You’ll get a unique code, a join link (e.g., `https://tasting.hallofmirth.us/join/ABC123`), and a QR code.
