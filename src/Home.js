@@ -180,8 +180,21 @@ function Home() {
                     Or share this link:
                   </Typography>
                   <Typography variant="body2" gutterBottom sx={{ wordBreak: "break-all" }}>
-                    {tastingLink}
+                    <a
+                      href={tastingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "#1976d2",
+                        textDecoration: "underline",
+                        wordBreak: "break-all",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {tastingLink}
+                    </a>
                   </Typography>
+
                   <Box mt={2} display="flex" justifyContent="center">
                     <QRCodeCanvas value={tastingLink} size={128} />
                   </Box>
