@@ -18,7 +18,7 @@ const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: "#f8f9fa",
+      default: "#23272e",  // Or any deep gray you prefer
       paper: "#fff"
     },
     primary: {
@@ -28,10 +28,10 @@ const theme = createTheme({
       main: "#ff7043",
     },
     text: {
-      primary: "#1a1a1a",
-      secondary: "#555",
+      primary: "#f8f9fa",  // Optionally lighten the main text on dark bg
+      secondary: "#bbb",   // Softer secondary text
     },
-  },
+  },  
   shape: {
     borderRadius: 14,
   },
