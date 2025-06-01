@@ -13,6 +13,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Fade from "@mui/material/Fade";
+import { useTheme } from "@mui/material/styles"; // <-- add this
 
 function JoinTasting() {
   const { tastingId } = useParams();
@@ -25,6 +26,8 @@ function JoinTasting() {
   const [saved, setSaved] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
+
+  const theme = useTheme(); // <-- theme for colors
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((firebaseUser) => {
@@ -152,10 +155,10 @@ function JoinTasting() {
   return (
     <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 6 }, mb: 4 }}>
       {/* Tasting Name at top, then subtitle */}
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: theme.palette.text.primary }}>
         {tasting.name ? tasting.name : "Blind Tasting"}
       </Typography>
-      <Typography sx={{ mb: 2 }}>
+      <Typography sx={{ mb: 2, color: theme.palette.text.secondary }}>
         Hi <b>{user.displayName}</b>! Please rate the {tasting.numItems} items.
       </Typography>
 
@@ -177,18 +180,17 @@ function JoinTasting() {
             sx={{
               my: 2,
               p: 2,
-              borderRadius: 2,
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-              background: "#fafbfc"
+              borderRadius: 4,
+              background: theme.palette.background.paper,
+              color: theme.palette.text.primary,
+              transition: "background 0.3s, color 0.3s"
             }}
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, color: theme.palette.text.primary }}>
               Item {idx + 1}
             </Typography>
             <Box display="flex" alignItems="center" gap={2} sx={{ mb: 1 }}>
-              <Typography sx={{ minWidth: 70 }}>Rating:</Typography>
+              <Typography sx={{ minWidth: 70, color: theme.palette.text.primary }}>Rating:</Typography>
               <Slider
                 value={ratings[idx] || 5}
                 min={1}
@@ -199,7 +201,7 @@ function JoinTasting() {
                 onChange={(_, value) => handleSliderChange(idx, value)}
                 sx={{ width: 150, mx: 1 }}
               />
-              <Typography>{ratings[idx] || 5}</Typography>
+              <Typography sx={{ color: theme.palette.text.primary }}>{ratings[idx] || 5}</Typography>
             </Box>
             <TextField
               label="Your notes (private)"
@@ -210,7 +212,18 @@ function JoinTasting() {
               value={notes[idx] || ""}
               onChange={(e) => handleNotesChange(idx, e.target.value)}
               size="small"
-              sx={{ mt: 0.5 }}
+              sx={{
+                mt: 0.5,
+                background: theme.palette.background.default,
+                borderRadius: 2,
+                "& .MuiInputBase-input": { color: theme.palette.text.primary }
+              }}
+              InputLabelProps={{
+                style: { color: theme.palette.text.secondary },
+              }}
+              InputProps={{
+                style: { color: theme.palette.text.primary },
+              }}
             />
           </Paper>
         ))}
