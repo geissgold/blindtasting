@@ -18,28 +18,30 @@ const theme = createTheme({
   palette: {
     mode: "light",
     background: {
-      default: "#23272e",  // Or any deep gray you prefer
-      paper: "#fff"
+      default: "#23272e",  // deep gray app background
+      paper: "#fff"        // cards, tables, dialogs remain white
     },
     primary: {
-      main: "#283593",
+      main: "#283593",     // indigo
     },
     secondary: {
-      main: "#ff7043",
+      main: "#ff7043",     // orange
     },
-    //text: {
-    //  primary: "#f8f9fa",  // Optionally lighten the main text on dark bg
-    //  secondary: "#bbb",   // Softer secondary text
-    //},
-  },  
+    text: {
+      primary: "#18181a",      // dark, always readable inside cards
+      secondary: "#43444c",    // for softer/lighter bits
+    },
+  },
   shape: {
     borderRadius: 14,
   },
   typography: {
     fontFamily: `"Inter", "Helvetica Neue", Arial, sans-serif`,
-    h4: { fontWeight: 700 },
-    h5: { fontWeight: 500 },
-    button: { textTransform: "none" }
+    h4: { fontWeight: 700, color: "#18181a" }, // make headings extra clear
+    h5: { fontWeight: 500, color: "#18181a" },
+    button: { textTransform: "none" },
+    body1: { color: "#18181a" },
+    body2: { color: "#18181a" }
   },
   components: {
     MuiButton: {
@@ -49,16 +51,22 @@ const theme = createTheme({
     },
     MuiPaper: {
       styleOverrides: {
-        root: { borderRadius: 18 }
+        root: { borderRadius: 18, color: "#18181a" }
+      }
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: { color: "#18181a", fontWeight: 500 }
       }
     },
     MuiTextField: {
       styleOverrides: {
-        root: { marginBottom: 20 }
+        root: { marginBottom: 20, color: "#18181a" }
       }
     }
   }
 });
+
 
 function ResponsiveHeader() {
   const theme = useTheme();
