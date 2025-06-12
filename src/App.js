@@ -19,6 +19,7 @@ import JoinTasting from "./JoinTasting";
 import Results from "./Results";
 import FinalResults from "./FinalResults";
 import MyTastings from "./MyTastings";
+import EmailLinkHandler from "./EmailLinkHandler"; // <--- NEW
 import { lightTheme, darkTheme } from "./themes"; // <-- import your themes
 
 function ResponsiveHeader({ darkMode, setDarkMode }) {
@@ -176,6 +177,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        {/* MAGIC LINK HANDLER */}
+        <EmailLinkHandler />
         <ResponsiveHeader darkMode={darkMode} setDarkMode={setDarkMode} />
         <Container maxWidth="md">
           <Routes>

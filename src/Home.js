@@ -6,8 +6,14 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import { auth, provider, db } from "./firebase";
-import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
+import { signInWithPopup, onAuthStateChanged, signOut, sendSignInLinkToEmail } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { QRCodeCanvas } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +25,12 @@ function Home() {
   const [creating, setCreating] = useState(false);
   const [numItems, setNumItems] = useState("");
   const [createdTasting, setCreatedTasting] = useState(null);
+
+  // Email link state
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -37,6 +49,27 @@ function Home() {
 
   const handleLogout = () => {
     signOut(auth);
+  };
+
+  // --- Magic Link Auth handlers ---
+  const handleSendMagicLink = async () => {
+    setEmailStatus("");
+    setEmailError("");
+    try {
+      if (!email || !email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
+        setEmailError("Please enter a valid email.");
+        return;
+      }
+      await sendSignInLinkToEmail(auth, email, {
+        url: window.location.origin, // Use your deployed app's root URL
+        handleCodeInApp: true
+      });
+      window.localStorage.setItem("emailForSignIn", email);
+      setEmailStatus("Magic link sent! Check your email.");
+      setEmail("");
+    } catch (error) {
+      setEmailError(error.message);
+    }
   };
 
   const handleCreateTasting = async (e) => {
@@ -73,7 +106,6 @@ function Home() {
 
   const tastingLink = createdTasting ? `https://tasting.hallofmirth.us/join/${createdTasting}` : "";
 
-
   return (
     <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 8 }, mb: 8 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
@@ -92,6 +124,55 @@ function Home() {
               >
                 Sign in with Google
               </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                size="large"
+                onClick={() => setEmailDialogOpen(true)}
+                sx={{ borderRadius: 2, fontWeight: 600, px: 4, py: 1.2, ml: 2, mt: { xs: 2, sm: 0 } }}
+              >
+                Sign in with Email
+              </Button>
+              <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+                <DialogTitle>
+                  Sign in with Email
+                  <IconButton
+                    aria-label="close"
+                    onClick={() => setEmailDialogOpen(false)}
+                    sx={{
+                      position: "absolute",
+                      right: 8,
+                      top: 8,
+                      color: (theme) => theme.palette.grey[500]
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ pb: 1 }}>
+                  <TextField
+                    label="Email Address"
+                    type="email"
+                    fullWidth
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    sx={{ my: 2 }}
+                    error={!!emailError}
+                    helperText={emailError}
+                    autoFocus
+                  />
+                  {emailStatus && (
+                    <Typography variant="body2" color="success.main">
+                      {emailStatus}
+                    </Typography>
+                  )}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleSendMagicLink} variant="contained">
+                    Send Magic Link
+                  </Button>
+                </DialogActions>
+              </Dialog>
             </Box>
           ) : (
             <Box>
