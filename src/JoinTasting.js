@@ -24,6 +24,7 @@ import DialogActions from "@mui/material/DialogActions";
 import IconButton from "@mui/material/IconButton";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useTheme } from "@mui/material/styles";
+import { QRCodeCanvas } from "qrcode.react"; "@mui/material/styles";
 
 function JoinTasting() {
   const { tastingId } = useParams();
