@@ -1,9 +1,17 @@
 // src/JoinTasting.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { db, auth } from "./firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "firebase/firestore";
+
+// ➊ lodash.debounce import
+import debounce from "lodash.debounce";
 
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -90,6 +98,33 @@ function JoinTasting() {
     }
   }, [saved]);
 
+  // ➋ Debounced auto-save
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (newRatings, newNotes) => {
+        try {
+          const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
+          await setDoc(rRef, {
+            ratings: newRatings,
+            notes: newNotes,
+            displayName: user.displayName,
+            submittedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Auto-save error:", err);
+        }
+      }, 500),
+    [tastingId, user]
+  );
+
+  // ➌ Trigger auto-save when ratings or notes change
+  useEffect(() => {
+    if (user) {
+      debouncedSave(ratings, notes);
+      return () => debouncedSave.flush();
+    }
+  }, [ratings, notes]);
+
   // 4) Early returns
   if (needsSignIn) {
     return (
@@ -144,6 +179,7 @@ function JoinTasting() {
     setSaved(false);
   };
 
+  // Manual save (optional backup)
   const handleSave = async () => {
     setSaving(true);
     try {
