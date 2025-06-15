@@ -17,6 +17,12 @@ import Alert from "@mui/material/Alert";
 import Rating from "@mui/material/Rating";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { Fade } from "@mui/material";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import IconButton from "@mui/material/IconButton";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useTheme } from "@mui/material/styles";
 
 function JoinTasting() {
@@ -32,6 +38,10 @@ function JoinTasting() {
   const [saved, setSaved]         = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [saving, setSaving]       = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+
+  // Build share link
+  const shareLink = `${window.location.origin}/join/${tastingId}`;
 
   // 1) Listen auth state
   useEffect(() => {
@@ -58,15 +68,12 @@ function JoinTasting() {
         } else {
           const data = tSnap.data();
           setTasting(data);
-          // load existing response
           const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
           const rSnap = await getDoc(rRef);
           if (rSnap.exists()) {
             const resp = rSnap.data();
             setRatings(
-              Array(data.numItems).fill(null).map((_, i) =>
-                resp.ratings?.[i] ?? null
-              )
+              Array(data.numItems).fill(null).map((_, i) => resp.ratings?.[i] ?? null)
             );
             setNotes(
               Array(data.numItems).fill("").map((_, i) =>
@@ -90,19 +97,20 @@ function JoinTasting() {
 
   // 3) Debounced auto-save
   const debouncedSave = useMemo(
-    () => debounce(async (r, n) => {
-      if (!user || !tasting) return;
-      try {
-        const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
-        await setDoc(
-          rRef,
-          { ratings: r, notes: n, displayName: user.displayName, submittedAt: serverTimestamp() },
-          { merge: true }
-        );
-      } catch (e) {
-        console.warn("Auto-save error:", e);
-      }
-    }, 500),
+    () =>
+      debounce(async (r, n) => {
+        if (!user || !tasting) return;
+        try {
+          const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
+          await setDoc(
+            rRef,
+            { ratings: r, notes: n, displayName: user.displayName, submittedAt: serverTimestamp() },
+            { merge: true }
+          );
+        } catch (err) {
+          console.warn("Auto-save failed", err);
+        }
+      }, 500),
     [tastingId, user, tasting]
   );
 
@@ -110,13 +118,9 @@ function JoinTasting() {
     debouncedSave(ratings, notes);
   }, [ratings, notes, debouncedSave]);
 
-  useEffect(() => {
-    return () => {
-      debouncedSave.cancel();
-    };
-  }, [debouncedSave]);
+  useEffect(() => () => debouncedSave.cancel(), [debouncedSave]);
 
-  // 4) Manual fade feedback
+  // 4) Manual save feedback
   useEffect(() => {
     if (saved) {
       setShowSaved(true);
@@ -171,7 +175,6 @@ function JoinTasting() {
     setNotes(copy);
     setSaved(false);
   };
-
   const handleSaveClick = async () => {
     setSaving(true);
     try {
@@ -197,6 +200,31 @@ function JoinTasting() {
       >
         {tasting.name || "Blind Tasting"}
       </Typography>
+
+      {/* Share Tasting Button & Dialog */}
+      <Box sx={{ textAlign: "right", mb: 2 }}>
+        <Button variant="outlined" size="small" onClick={() => setShareOpen(true)}>
+          Share Tasting
+        </Button>
+      </Box>
+      <Dialog open={shareOpen} onClose={() => setShareOpen(false)}>
+        <DialogTitle>Share This Tasting</DialogTitle>
+        <DialogContent sx={{ textAlign: "center" }}>
+          <QRCodeCanvas value={shareLink} size={160} />
+          <Box sx={{ mt: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Typography variant="body2" sx={{ mr: 1, wordBreak: "break-all" }}>
+              {shareLink}
+            </Typography>
+            <IconButton size="small" onClick={() => navigator.clipboard.writeText(shareLink)}>
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
       <Typography sx={{ mb: 2, color: theme.palette.text.secondary }}>
         Hi <b>{user.displayName}</b> — please rate {tasting.numItems} items:
       </Typography>
