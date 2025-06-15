@@ -3,12 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { db, auth } from "./firebase";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
-} from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -37,13 +32,13 @@ function JoinTasting() {
   const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // 1) Track auth state
+  // 1) Auth state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(fbUser => setUser(fbUser));
     return () => unsub();
   }, []);
 
-  // 2) Fetch tasting + initialize ratings/notes
+  // 2) Fetch tasting & existing response
   useEffect(() => {
     if (!user) {
       setNeedsSignIn(true);
@@ -53,7 +48,7 @@ function JoinTasting() {
     setNeedsSignIn(false);
     setLoading(true);
 
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         const tRef = doc(db, "tastings", tastingId);
         const tSnap = await getDoc(tRef);
@@ -64,9 +59,9 @@ function JoinTasting() {
           const data = tSnap.data();
           setTasting(data);
 
-          // load existing response or init nulls
           const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
           const rSnap = await getDoc(rRef);
+
           if (rSnap.exists()) {
             const resp = rSnap.data();
             setRatings(resp.ratings ?? Array(data.numItems).fill(null));
@@ -82,12 +77,11 @@ function JoinTasting() {
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchData();
   }, [user, tastingId]);
 
-  // 3) Saved message fade
+  // 3) Fade saved message
   useEffect(() => {
     if (saved) {
       setShowSaved(true);
@@ -137,6 +131,7 @@ function JoinTasting() {
   // 5) Handlers
   const handleRatingChange = (idx, newVal) => {
     const copy = [...ratings];
+    // click same star → clear
     copy[idx] = newVal === ratings[idx] ? null : newVal;
     setRatings(copy);
     setSaved(false);
@@ -161,7 +156,7 @@ function JoinTasting() {
       });
       setSaved(true);
     } catch (e) {
-      alert("Failed to save ratings: "+e.message);
+      alert("Failed to save ratings: " + e.message);
     }
     setSaving(false);
   };
@@ -179,15 +174,15 @@ function JoinTasting() {
         Hi <b>{user.displayName}</b> — please rate {tasting.numItems} items:
       </Typography>
 
-      <Fade in={showSaved} timeout={{enter:300,exit:500}}>
-        {showSaved && (
+      {showSaved && (
+        <Fade in timeout={{ enter:300, exit:500 }}>
           <Alert severity="success" sx={{ mb:3 }}>
             Your ratings and notes have been saved!
           </Alert>
-        )}
-      </Fade>
+        </Fade>
+      )}
 
-      {Array.from({length:tasting.numItems}).map((_,idx)=>(
+      {Array.from({ length: tasting.numItems }).map((_, idx) => (
         <Paper
           key={idx}
           elevation={2}
@@ -215,7 +210,7 @@ function JoinTasting() {
               precision={1}
               max={5}
               emptyIcon={<StarBorderIcon fontSize="inherit" />}
-              onChange={(_,val)=>handleRatingChange(idx,val)}
+              onChange={(_,v) => handleRatingChange(idx,v)}
               size="large"
             />
           </Box>
@@ -226,15 +221,11 @@ function JoinTasting() {
             minRows={2}
             fullWidth
             value={notes[idx]}
-            onChange={e=>handleNotesChange(idx,e.target.value)}
+            onChange={e => handleNotesChange(idx,e.target.value)}
             size="small"
             sx={{
-              "& .MuiInputBase-input": {
-                color: theme.palette.text.primary
-              },
-              "& .MuiInputLabel-root": {
-                color: theme.palette.text.secondary
-              }
+              "& .MuiInputBase-input": { color: theme.palette.text.primary },
+              "& .MuiInputLabel-root": { color: theme.palette.text.secondary }
             }}
           />
         </Paper>
