@@ -11,8 +11,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  getDoc,
-  FieldPath
+  documentId,
+  getDoc
 } from "firebase/firestore";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -44,121 +44,113 @@ function MyTastings() {
 
   const navigate = useNavigate();
 
+  // show QR modal
   const handleShowQR = (tasting) => {
     setQRTasting(tasting);
     setQROpen(true);
   };
-
   const handleCloseQR = () => {
     setQROpen(false);
     setQRTasting(null);
   };
 
-  // Listen for auth changes
+  // listen auth
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((firebaseUser) => {
-      setUser(firebaseUser);
+    const unsub = auth.onAuthStateChanged((fbUser) => {
+      setUser(fbUser);
     });
     return () => unsub();
   }, []);
 
-  // Fetch tastings created by user AND tastings user participated in
+  // fetch both created and joined tastings
   useEffect(() => {
     if (!user) return;
     setLoading(true);
     setError("");
 
-    (async () => {
+    async function fetchTastings() {
       try {
-        // 1) Tastings user created
-        const qc = query(
+        // 1) created by this user
+        const createdQ = query(
           collection(db, "tastings"),
           where("createdBy", "==", user.uid)
         );
-        const snapC = await getDocs(qc);
-        const created = snapC.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const createdSnap = await getDocs(createdQ);
+        const created = createdSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // 2) Tastings user responded to
-        const qr = query(
+        // 2) joined: find all responses docs where documentId == user.uid
+        const respQ = query(
           collectionGroup(db, "responses"),
-          where(FieldPath.documentId(), "==", user.uid)
+          where(documentId(), "==", user.uid)
         );
-        const snapR = await getDocs(qr);
-        const respondedIds = Array.from(
-          new Set(snapR.docs.map((d) => d.ref.parent.parent.id))
-        );
-        const otherIds = respondedIds.filter(
-          (id) => !created.find((t) => t.id === id)
+        const respSnap = await getDocs(respQ);
+        const joinedIds = Array.from(
+          new Set(
+            respSnap.docs.map(d => d.ref.parent.parent.id)
+          )
         );
 
-        // Fetch those participations
-        const others = await Promise.all(
-          otherIds.map(async (id) => {
-            const td = await getDoc(doc(db, "tastings", id));
-            return td.exists() ? { id: td.id, ...td.data() } : null;
-          })
-        );
-        const participated = others.filter(Boolean);
+        // fetch those tastings
+        const joined = [];
+        for (let id of joinedIds) {
+          // skip if already created
+          if (created.find(t => t.id === id)) continue;
+          const tDoc = await getDoc(doc(db, "tastings", id));
+          if (tDoc.exists()) joined.push({ id: tDoc.id, ...tDoc.data() });
+        }
 
-        // Merge and sort
-        const all = [...created, ...participated];
-        all.sort(
-          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-        );
+        // combine & sort
+        const all = [...created, ...joined];
+        all.sort((a, b) => {
+          const aT = a.createdAt?.seconds || 0;
+          const bT = b.createdAt?.seconds || 0;
+          return bT - aT;
+        });
+
         setTastings(all);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch tastings.");
-      } finally {
-        setLoading(false);
       }
-    })();
+      setLoading(false);
+    }
+    fetchTastings();
   }, [user, deleting]);
 
-  // Delete tasting
+  // delete tasting (only host can)
   const handleDelete = async (id) => {
     setDeleting(true);
     try {
       await deleteDoc(doc(db, "tastings", id));
       setDeleteId(null);
     } catch (err) {
-      setError("Failed to delete tasting: " + err.message);
+      console.error(err);
+      setError("Failed to delete tasting.");
     }
     setDeleting(false);
   };
 
-  if (!user) {
-    return (
-      <Container>
-        <Alert severity="info" sx={{ my: 4 }}>
-          Please sign in with Google to view your tastings.
-        </Alert>
-      </Container>
-    );
-  }
+  // show login prompt
+  if (!user) return (
+    <Container>
+      <Alert severity="info" sx={{ my: 4 }}>
+        Please sign in with Google to view your tastings.
+      </Alert>
+    </Container>
+  );
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        My Tastings
-      </Typography>
+    <Container maxWidth="md" sx={{ mt:4, mb:4 }}>
+      <Typography variant="h4" gutterBottom>My Tastings</Typography>
       <Box mb={2}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate("/")}
-        >
-          New Tasting
-        </Button>
+        <Button variant="contained" onClick={()=>navigate("/")}>New Tasting</Button>
       </Box>
-      {error && <Alert severity="error">{error}</Alert>}
 
+      {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
       {loading ? (
-        <Box display="flex" justifyContent="center">
-          <CircularProgress />
-        </Box>
-      ) : tastings.length === 0 ? (
-        <Alert severity="info" sx={{ my: 4 }}>
+        <Box display="flex" justifyContent="center"><CircularProgress/></Box>
+      ) : tastings.length===0 ? (
+        <Alert severity="info" sx={{ my:4 }}>
           You haven't created or joined any tastings yet.
         </Alert>
       ) : (
@@ -166,7 +158,7 @@ function MyTastings() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Tasting Name</TableCell>
+                <TableCell>Name</TableCell>
                 <TableCell>Date</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell># Items</TableCell>
@@ -174,7 +166,7 @@ function MyTastings() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tastings.map((row) => (
+              {tastings.map(row => (
                 <TableRow key={row.id}>
                   <TableCell>{row.name || "Untitled"}</TableCell>
                   <TableCell>
@@ -183,51 +175,36 @@ function MyTastings() {
                       : ""}
                   </TableCell>
                   <TableCell>
-                    {row.status === "closed" ? (
-                      <span style={{ color: "#388e3c" }}>Closed</span>
-                    ) : (
-                      <span style={{ color: "#d32f2f" }}>Open</span>
-                    )}
+                    {row.status==="closed"
+                      ? <span style={{color:'#388e3c'}}>Closed</span>
+                      : <span style={{color:'#d32f2f'}}>Open</span>}
                   </TableCell>
                   <TableCell>{row.numItems}</TableCell>
                   <TableCell>
-                    {row.status !== "closed" && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleShowQR(row)}
-                        sx={{ mr: 1 }}
-                      >
-                        Show QR
-                      </Button>
+                    {row.createdBy===user.uid ? (
+                      // host actions
+                      <>
+                        {row.status!=='closed' && (
+                          <Button size="small" onClick={()=>handleShowQR(row)} sx={{mr:1}}>Show QR</Button>
+                        )}
+                        <Button size="small" onClick={()=>navigate(`/results/${row.id}`)} sx={{mr:1}}>Manage</Button>
+                        {row.status==='closed' && (
+                          <Button size="small" onClick={()=>navigate(`/final/${row.id}`)} color="success" sx={{mr:1}}>Final</Button>
+                        )}
+                        <Button size="small" color="error" onClick={()=>setDeleteId(row.id)}>
+                          Delete
+                        </Button>
+                      </>
+                    ) : (
+                      // participant actions
+                      <>
+                        {row.status!=='closed' ? (
+                          <Button size="small" onClick={()=>navigate(`/join/${row.id}`)}>Join</Button>
+                        ) : (
+                          <Button size="small" onClick={()=>navigate(`/final/${row.id}`)}>Results</Button>
+                        )}
+                      </>
                     )}
-                    <Button
-                      size="small"
-                      onClick={() => navigate(`/results/${row.id}`)}
-                      variant="outlined"
-                      sx={{ mr: 1 }}
-                    >
-                      Manage
-                    </Button>
-                    {row.status === "closed" && (
-                      <Button
-                        size="small"
-                        onClick={() => navigate(`/final/${row.id}`)}
-                        variant="contained"
-                        color="success"
-                        sx={{ mr: 1 }}
-                      >
-                        Final Results
-                      </Button>
-                    )}
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      onClick={() => setDeleteId(row.id)}
-                    >
-                      Delete
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -236,54 +213,35 @@ function MyTastings() {
         </TableContainer>
       )}
 
-      {/* Delete confirmation dialog */}
-      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
+      {/* delete confirm */}
+      <Dialog open={!!deleteId} onClose={()=>setDeleteId(null)}>
         <DialogTitle>Delete Tasting?</DialogTitle>
         <DialogContent>
-          Are you sure you want to delete this tasting? This cannot be undone. <br />
-          <b>All responses will be lost!</b>
+          Are you sure? This cannot be undone.
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteId(null)} disabled={deleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handleDelete(deleteId)}
-            color="error"
-            disabled={deleting}
-          >
-            {deleting ? "Deleting..." : "Delete"}
+          <Button onClick={()=>setDeleteId(null)} disabled={deleting}>Cancel</Button>
+          <Button onClick={()=>handleDelete(deleteId)} color="error" disabled={deleting}>
+            {deleting? 'Deleting...':'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Share QR dialog */}
+      {/* QR dialog */}
       <Dialog open={qrOpen} onClose={handleCloseQR}>
         <DialogTitle>Share This Tasting</DialogTitle>
-        <DialogContent sx={{ textAlign: "center" }}>
+        <DialogContent sx={{textAlign:'center',py:2}}>
           {qrTasting && (
-            <>
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                Event Code:<br />
-                <b>{qrTasting.id}</b>
+            <>  
+              <Typography variant="body2" sx={{mb:1}}>
+                Code: <b>{qrTasting.id}</b>
               </Typography>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Or join link:<br />
-                <a
-                  href={`https://tasting.hallofmirth.us/join/${qrTasting.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ wordBreak: "break-all" }}
-                >
-                  {`https://tasting.hallofmirth.us/join/${qrTasting.id}`}
+              <Typography variant="body2" sx={{mb:2,wordBreak:'break-all'}}>
+                <a href={`${window.location.origin}/join/${qrTasting.id}`} target="_blank" rel="noopener noreferrer">
+                  {`${window.location.origin}/join/${qrTasting.id}`}
                 </a>
               </Typography>
-              <Box sx={{ my: 2 }}>
-                <QRCodeCanvas
-                  value={`https://tasting.hallofmirth.us/join/${qrTasting.id}`}
-                  size={170}
-                />
-              </Box>
+              <QRCodeCanvas value={`${window.location.origin}/join/${qrTasting.id}`} size={170}/>
             </>
           )}
         </DialogContent>
@@ -291,7 +249,6 @@ function MyTastings() {
           <Button onClick={handleCloseQR}>Close</Button>
         </DialogActions>
       </Dialog>
-
     </Container>
   );
 }
