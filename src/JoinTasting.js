@@ -38,47 +38,19 @@ function JoinTasting() {
   const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  // 1) Listen for Firebase auth state
+  // Build a reference to this user's response doc
+  const responseRef = useMemo(() => {
+    if (!user) return null;
+    return doc(db, "tastings", tastingId, "responses", user.uid);
+  }, [user, tastingId]);
+
+  // 1) Auth state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(fbUser => setUser(fbUser));
     return () => unsub();
   }, []);
 
-  // 2) Build a reference to this user's response doc
-  const responseRef = useMemo(() => {
-    if (!user) return null;
-    return doc(db, "tastings", tastingId, "responses", user.uid);
-  }, [tastingId, user]);
-
-  // 3) Debounced auto-save: will fire 500ms after the last call
-  const debouncedSave = useMemo(() => {
-    if (!responseRef) return null;
-    return debounce(async (newRatings, newNotes) => {
-      try {
-        await setDoc(
-          responseRef,
-          {
-            ratings: newRatings,
-            notes:    newNotes,
-            displayName: user.displayName,
-            submittedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      } catch (e) {
-        console.error("Auto-save failed", e);
-      }
-    }, 500);
-  }, [responseRef, user]);
-
-  // cancel any pending auto-save on unmount
-  useEffect(() => {
-    return () => {
-      debouncedSave?.cancel();
-    };
-  }, [debouncedSave]);
-
-  // 4) Fetch tasting metadata + any existing response
+  // 2) Fetch tasting & existing response
   useEffect(() => {
     if (!user) {
       setNeedsSignIn(true);
@@ -90,24 +62,36 @@ function JoinTasting() {
 
     async function fetchData() {
       try {
-        // tasting doc
-        const tRef  = doc(db, "tastings", tastingId);
+        const tRef = doc(db, "tastings", tastingId);
         const tSnap = await getDoc(tRef);
+
         if (!tSnap.exists()) {
           setTasting(null);
         } else {
           const data = tSnap.data();
           setTasting(data);
 
-          // user’s previous response
           const rSnap = await getDoc(responseRef);
           if (rSnap.exists()) {
             const resp = rSnap.data();
-            setRatings(resp.ratings ?? Array(data.numItems).fill(null));
-            setNotes(  resp.notes   ?? Array(data.numItems).fill("")  );
+            // merge into a fixed-length array of length numItems
+            setRatings(
+              Array(data.numItems)
+                .fill(null)
+                .map((_, i) =>
+                  resp.ratings?.[i] != null ? resp.ratings[i] : null
+                )
+            );
+            setNotes(
+              Array(data.numItems)
+                .fill("")
+                .map((_, i) =>
+                  typeof resp.notes?.[i] === "string" ? resp.notes[i] : ""
+                )
+            );
           } else {
             setRatings(Array(data.numItems).fill(null));
-            setNotes(  Array(data.numItems).fill("")           );
+            setNotes(Array(data.numItems).fill(""));
           }
         }
       } catch (e) {
@@ -117,11 +101,10 @@ function JoinTasting() {
         setLoading(false);
       }
     }
-
     fetchData();
   }, [user, tastingId, responseRef]);
 
-  // 5) Fade-out “saved!” alert when user manually hits Save
+  // 3) Fade saved message
   useEffect(() => {
     if (saved) {
       setShowSaved(true);
@@ -130,7 +113,7 @@ function JoinTasting() {
     }
   }, [saved]);
 
-  // 6) Early returns
+  // 4) Early returns
   if (needsSignIn) {
     return (
       <Container sx={{ mt:4, textAlign:"center" }}>
@@ -141,7 +124,7 @@ function JoinTasting() {
           variant="contained"
           onClick={() => {
             const p = new GoogleAuthProvider();
-            signInWithPopup(auth, p).catch(() => {});
+            signInWithPopup(auth,p).catch(()=>{});
           }}
         >
           Sign in with Google
@@ -166,13 +149,14 @@ function JoinTasting() {
     );
   }
 
-  // 7) Handlers
+  // 5) Handlers
   const handleRatingChange = (idx, newVal) => {
     const copy = [...ratings];
-    // clicking the same star again clears your vote
+    // click same star → clear
     copy[idx] = newVal === ratings[idx] ? null : newVal;
     setRatings(copy);
     setSaved(false);
+    // schedule a debounced auto-save
     debouncedSave?.(copy, notes);
   };
 
@@ -184,14 +168,44 @@ function JoinTasting() {
     debouncedSave?.(ratings, copy);
   };
 
+  // 6) Debounced auto-save (fires 500ms after last change)
+  const debouncedSave = useMemo(() => {
+    if (!responseRef || !user) return null;
+    return debounce(async (newRatings, newNotes) => {
+      try {
+        // sanitize: undefined → null, notes to string
+        const safeRatings = newRatings.map(r => r == null ? null : r);
+        const safeNotes   = newNotes.map(n => n || "");
+        await setDoc(
+          responseRef,
+          {
+            ratings: safeRatings,
+            notes:   safeNotes,
+            displayName: user.displayName,
+            submittedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (e) {
+        console.error("Auto-save failed:", e);
+      }
+    }, 500);
+  }, [responseRef, user]);
+
+  // clean up on unmount
+  useEffect(() => () => debouncedSave?.cancel(), [debouncedSave]);
+
+  // 7) Manual “Save My Ratings” button
   const handleManualSave = async () => {
     setSaving(true);
     try {
+      const safeRatings = ratings.map(r => r == null ? null : r);
+      const safeNotes   = notes.map(n => n || "");
       await setDoc(
         responseRef,
         {
-          ratings,
-          notes,
+          ratings: safeRatings,
+          notes:   safeNotes,
           displayName: user.displayName,
           submittedAt: serverTimestamp(),
         },
@@ -204,7 +218,7 @@ function JoinTasting() {
     setSaving(false);
   };
 
-  // 8) Render
+  // --- Render ---
   return (
     <Container maxWidth="sm" sx={{ mt:{xs:3,sm:6}, mb:4 }}>
       <Typography
@@ -253,7 +267,7 @@ function JoinTasting() {
               precision={1}
               max={5}
               emptyIcon={<StarBorderIcon fontSize="inherit" />}
-              onChange={(_,v) => handleRatingChange(idx, v)}
+              onChange={(_,v) => handleRatingChange(idx,v)}
               size="large"
             />
           </Box>
@@ -264,7 +278,7 @@ function JoinTasting() {
             minRows={2}
             fullWidth
             value={notes[idx]}
-            onChange={e => handleNotesChange(idx, e.target.value)}
+            onChange={e => handleNotesChange(idx,e.target.value)}
             size="small"
             sx={{
               "& .MuiInputBase-input": { color: theme.palette.text.primary },
