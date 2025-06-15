@@ -69,6 +69,7 @@ function MyTastings() {
     setError("");
 
     async function fetchTastings() {
+      let created = [];
       try {
         // 1) created by this user
         const createdQ = query(
@@ -76,9 +77,17 @@ function MyTastings() {
           where("createdBy", "==", user.uid)
         );
         const createdSnap = await getDocs(createdQ);
-        const created = createdSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        created = createdSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (err) {
+        console.error('Error loading created tastings:', err);
+        setError("Failed to fetch your tastings.");
+        setLoading(false);
+        return;
+      }
 
-        // 2) joined: find all responses docs where documentId == user.uid
+      // 2) joined: attempt to load responses, but do not fail entire fetch if errors
+      let joined = [];
+      try {
         const respQ = query(
           collectionGroup(db, "responses"),
           where(documentId(), "==", user.uid)
@@ -86,32 +95,28 @@ function MyTastings() {
         const respSnap = await getDocs(respQ);
         const joinedIds = Array.from(
           new Set(
-            respSnap.docs.map(d => d.ref.parent.parent.id)
+            respSnap.docs.map(d => d.ref.parent.parent?.id).filter(id => id)
           )
         );
-
-        // fetch those tastings
-        const joined = [];
         for (let id of joinedIds) {
-          // skip if already created
-          if (created.find(t => t.id === id)) continue;
+          if (created.some(t => t.id === id)) continue;
           const tDoc = await getDoc(doc(db, "tastings", id));
           if (tDoc.exists()) joined.push({ id: tDoc.id, ...tDoc.data() });
         }
-
-        // combine & sort
-        const all = [...created, ...joined];
-        all.sort((a, b) => {
-          const aT = a.createdAt?.seconds || 0;
-          const bT = b.createdAt?.seconds || 0;
-          return bT - aT;
-        });
-
-        setTastings(all);
       } catch (err) {
-        console.error(err);
-        setError("Failed to fetch tastings.");
+        console.warn('Skipping joined tastings load:', err);
+        // no action, leave joined empty
       }
+
+      // combine & sort
+      const all = [...created, ...joined];
+      all.sort((a, b) => {
+        const aT = a.createdAt?.seconds || 0;
+        const bT = b.createdAt?.seconds || 0;
+        return bT - aT;
+      });
+
+      setTastings(all);
       setLoading(false);
     }
     fetchTastings();
