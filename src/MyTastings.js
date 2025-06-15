@@ -54,7 +54,7 @@ function MyTastings() {
     setQRTasting(null);
   };
 
-  // Listen for auth state
+  // Listen auth state
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((fbUser) => {
       setUser(fbUser);
@@ -193,7 +193,7 @@ function MyTastings() {
                       <>
                         {row.status !== "closed" && (
                           <Button size="small" onClick={() => handleShowQR(row)} sx={{ mr: 1 }}>
-                            Show QR
+                            Share
                           </Button>
                         )}
                         <Button size="small" onClick={() => navigate(`/results/${row.id}`)} sx={{ mr: 1 }}>
@@ -211,13 +211,23 @@ function MyTastings() {
                     ) : (
                       <>
                         {row.status !== "closed" ? (
-                          <Button size="small" onClick={() => navigate(`/join/${row.id}`)}>
-                            Join
-                          </Button>
+                          <>
+                            <Button size="small" onClick={() => handleShowQR(row)} sx={{ mr: 1 }}>
+                              Share
+                            </Button>
+                            <Button size="small" onClick={() => navigate(`/join/${row.id}`)}>
+                              Join
+                            </Button>
+                          </>
                         ) : (
-                          <Button size="small" onClick={() => navigate(`/final/${row.id}`)}>
-                            Results
-                          </Button>
+                          <>
+                            <Button size="small" onClick={() => handleShowQR(row)} sx={{ mr: 1 }}>
+                              Share
+                            </Button>
+                            <Button size="small" onClick={() => navigate(`/final/${row.id}`)}>
+                              Results
+                            </Button>
+                          </>
                         )}
                       </>
                     )}
