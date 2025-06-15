@@ -118,12 +118,14 @@ function JoinTasting() {
   );
 
   // ➌ Trigger auto-save when ratings or notes change
-  useEffect(() => {
-    if (user) {
-      debouncedSave(ratings, notes);
-      return () => debouncedSave.flush();
-    }
-  }, [ratings, notes]);
+   useEffect(() => {
+       if (!user) return;
+       debouncedSave(ratings, notes);
+       return () => {
+         debouncedSave.flush();
+       };
+     // include user & debouncedSave so lint stops complaining
+     }, [ratings, notes, user, debouncedSave]);
 
   // 4) Early returns
   if (needsSignIn) {
