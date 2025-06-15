@@ -1,41 +1,49 @@
+// src/JoinTasting.js
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { db, auth } from "./firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "firebase/firestore";
+
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
-import Slider from "@mui/material/Slider";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Fade from "@mui/material/Fade";
-import { useTheme } from "@mui/material/styles"; // <-- add this
+import Rating from "@mui/material/Rating";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+import { useTheme } from "@mui/material/styles";
 
 function JoinTasting() {
   const { tastingId } = useParams();
-  const [user, setUser] = useState(null);
-  const [tasting, setTasting] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [ratings, setRatings] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const theme = useTheme();
+
+  const [user, setUser]           = useState(null);
+  const [tasting, setTasting]     = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [ratings, setRatings]     = useState([]);
+  const [notes, setNotes]         = useState([]);
+  const [saving, setSaving]       = useState(false);
+  const [saved, setSaved]         = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
 
-  const theme = useTheme(); // <-- theme for colors
-
+  // 1) Track auth state
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged((firebaseUser) => {
-      setUser(firebaseUser);
-    });
+    const unsub = auth.onAuthStateChanged(fbUser => setUser(fbUser));
     return () => unsub();
   }, []);
 
+  // 2) Fetch tasting + initialize ratings/notes
   useEffect(() => {
     if (!user) {
       setNeedsSignIn(true);
@@ -45,56 +53,61 @@ function JoinTasting() {
     setNeedsSignIn(false);
     setLoading(true);
 
-    async function fetchTasting() {
+    const fetchData = async () => {
       try {
-        const docRef = doc(db, "tastings", tastingId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setTasting(data);
-          // Optionally fetch user's existing ratings
-          const responseRef = doc(db, "tastings", tastingId, "responses", user.uid);
-          const responseSnap = await getDoc(responseRef);
-          if (responseSnap.exists()) {
-            setRatings(responseSnap.data().ratings || Array(data.numItems).fill(5));
-            setNotes(responseSnap.data().notes || Array(data.numItems).fill(""));
-          } else {
-            setRatings(Array(data.numItems).fill(5));
-            setNotes(Array(data.numItems).fill(""));
-          }
-        } else {
+        const tRef = doc(db, "tastings", tastingId);
+        const tSnap = await getDoc(tRef);
+
+        if (!tSnap.exists()) {
           setTasting(null);
+        } else {
+          const data = tSnap.data();
+          setTasting(data);
+
+          // load existing response or init nulls
+          const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
+          const rSnap = await getDoc(rRef);
+          if (rSnap.exists()) {
+            const resp = rSnap.data();
+            setRatings(resp.ratings ?? Array(data.numItems).fill(null));
+            setNotes(  resp.notes   ?? Array(data.numItems).fill("")  );
+          } else {
+            setRatings(Array(data.numItems).fill(null));
+            setNotes(  Array(data.numItems).fill("")           );
+          }
         }
-      } catch (error) {
+      } catch (e) {
+        console.error(e);
         setTasting(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
-    fetchTasting();
-    // eslint-disable-next-line
+    };
+
+    fetchData();
   }, [user, tastingId]);
 
+  // 3) Saved message fade
   useEffect(() => {
-    let timer;
     if (saved) {
       setShowSaved(true);
-      timer = setTimeout(() => setShowSaved(false), 3000);
+      const id = setTimeout(() => setShowSaved(false), 3000);
+      return () => clearTimeout(id);
     }
-    return () => clearTimeout(timer);
   }, [saved]);
 
+  // 4) Early returns
   if (needsSignIn) {
     return (
-      <Container>
-        <Alert severity="info" sx={{ my: 4 }}>
+      <Container sx={{ mt:4, textAlign:"center" }}>
+        <Alert severity="info" sx={{ mb:2 }}>
           Please sign in with Google to join this tasting.
         </Alert>
         <Button
           variant="contained"
-          color="primary"
-          onClick={() => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(() => {});
+          onClick={()=>{
+            const p = new GoogleAuthProvider();
+            signInWithPopup(auth,p).catch(()=>{});
           }}
         >
           Sign in with Google
@@ -103,140 +116,138 @@ function JoinTasting() {
     );
   }
 
-  if (loading)
+  if (loading) {
     return (
-      <Container>
-        <CircularProgress sx={{ my: 4 }} />
+      <Container sx={{ mt:4, textAlign:"center" }}>
+        <CircularProgress />
       </Container>
     );
+  }
 
   if (!tasting) {
     return (
-      <Container>
-        <Typography variant="h5" color="error" sx={{ my: 4 }}>
+      <Container sx={{ mt:4, textAlign:"center" }}>
+        <Typography variant="h5" color="error">
           Tasting not found!
         </Typography>
       </Container>
     );
   }
 
-  // ------- Rating UI below -------
-  const handleSliderChange = (idx, value) => {
-    const newRatings = [...ratings];
-    newRatings[idx] = value;
-    setRatings(newRatings);
+  // 5) Handlers
+  const handleRatingChange = (idx, newVal) => {
+    const copy = [...ratings];
+    copy[idx] = newVal === ratings[idx] ? null : newVal;
+    setRatings(copy);
     setSaved(false);
   };
 
-  const handleNotesChange = (idx, value) => {
-    const newNotes = [...notes];
-    newNotes[idx] = value;
-    setNotes(newNotes);
+  const handleNotesChange = (idx, txt) => {
+    const copy = [...notes];
+    copy[idx] = txt;
+    setNotes(copy);
     setSaved(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const responseRef = doc(db, "tastings", tastingId, "responses", user.uid);
-      await setDoc(responseRef, {
+      const rRef = doc(db, "tastings", tastingId, "responses", user.uid);
+      await setDoc(rRef, {
         ratings,
         notes,
         displayName: user.displayName,
-        submittedAt: serverTimestamp(),
+        submittedAt: serverTimestamp()
       });
       setSaved(true);
-    } catch (error) {
-      alert("Failed to save ratings: " + error.message);
+    } catch (e) {
+      alert("Failed to save ratings: "+e.message);
     }
     setSaving(false);
   };
 
+  // --- Render ---
   return (
-    <Container maxWidth="sm" sx={{ mt: { xs: 3, sm: 6 }, mb: 4 }}>
-      {/* Tasting Name at top, then subtitle */}
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: theme.palette.text.primary }}>
-        {tasting.name ? tasting.name : "Blind Tasting"}
+    <Container maxWidth="sm" sx={{ mt:{xs:3,sm:6}, mb:4 }}>
+      <Typography
+        variant="h4"
+        sx={{ fontWeight:700, mb:1, color: theme.palette.text.primary }}
+      >
+        {tasting.name || "Blind Tasting"}
       </Typography>
-      <Typography sx={{ mb: 2, color: theme.palette.text.secondary }}>
-        Hi <b>{user.displayName}</b>! Please rate the {tasting.numItems} items.
+      <Typography sx={{ mb:2, color: theme.palette.text.secondary }}>
+        Hi <b>{user.displayName}</b> — please rate {tasting.numItems} items:
       </Typography>
 
-      <Fade in={showSaved} timeout={{ enter: 300, exit: 500 }}>
-        <Box>
-          {showSaved && (
-            <Alert severity="success" sx={{ my: 2 }}>
-              Your ratings and notes have been saved!
-            </Alert>
-          )}
-        </Box>
+      <Fade in={showSaved} timeout={{enter:300,exit:500}}>
+        {showSaved && (
+          <Alert severity="success" sx={{ mb:3 }}>
+            Your ratings and notes have been saved!
+          </Alert>
+        )}
       </Fade>
 
-      <Box sx={{ mt: 2 }}>
-        {Array.from({ length: tasting.numItems }).map((_, idx) => (
-          <Paper
-            key={idx}
-            elevation={2}
-            sx={{
-              my: 2,
-              p: 2,
-              borderRadius: 4,
-              background: theme.palette.background.paper,
-              color: theme.palette.text.primary,
-              transition: "background 0.3s, color 0.3s"
-            }}
+      {Array.from({length:tasting.numItems}).map((_,idx)=>(
+        <Paper
+          key={idx}
+          elevation={2}
+          sx={{
+            mb:3,
+            p:2,
+            borderRadius:2,
+            background: theme.palette.background.paper
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{ mb:1, fontWeight:600, color: theme.palette.text.primary }}
           >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, color: theme.palette.text.primary }}>
-              Item {idx + 1}
+            Item {idx+1}
+          </Typography>
+
+          <Box sx={{ display:"flex", alignItems:"center", mb:1 }}>
+            <Typography sx={{ mr:2, color: theme.palette.text.primary }}>
+              Rating:
             </Typography>
-            <Box display="flex" alignItems="center" gap={2} sx={{ mb: 1 }}>
-              <Typography sx={{ minWidth: 70, color: theme.palette.text.primary }}>Rating:</Typography>
-              <Slider
-                value={ratings[idx] || 5}
-                min={1}
-                max={10}
-                step={1}
-                marks
-                valueLabelDisplay="auto"
-                onChange={(_, value) => handleSliderChange(idx, value)}
-                sx={{ width: 150, mx: 1 }}
-              />
-              <Typography sx={{ color: theme.palette.text.primary }}>{ratings[idx] || 5}</Typography>
-            </Box>
-            <TextField
-              label="Your notes (private)"
-              multiline
-              minRows={2}
-              maxRows={4}
-              fullWidth
-              value={notes[idx] || ""}
-              onChange={(e) => handleNotesChange(idx, e.target.value)}
-              size="small"
-              sx={{
-                mt: 0.5,
-                background: theme.palette.background.default,
-                borderRadius: 2,
-                "& .MuiInputBase-input": { color: theme.palette.text.primary }
-              }}
-              InputLabelProps={{
-                style: { color: theme.palette.text.secondary },
-              }}
-              InputProps={{
-                style: { color: theme.palette.text.primary },
-              }}
+            <Rating
+              name={`rating-${idx}`}
+              value={ratings[idx]}
+              precision={1}
+              max={5}
+              emptyIcon={<StarBorderIcon fontSize="inherit" />}
+              onChange={(_,val)=>handleRatingChange(idx,val)}
+              size="large"
             />
-          </Paper>
-        ))}
-      </Box>
-      <Box mt={2} display="flex" justifyContent="center">
+          </Box>
+
+          <TextField
+            label="Your notes (private)"
+            multiline
+            minRows={2}
+            fullWidth
+            value={notes[idx]}
+            onChange={e=>handleNotesChange(idx,e.target.value)}
+            size="small"
+            sx={{
+              "& .MuiInputBase-input": {
+                color: theme.palette.text.primary
+              },
+              "& .MuiInputLabel-root": {
+                color: theme.palette.text.secondary
+              }
+            }}
+          />
+        </Paper>
+      ))}
+
+      <Box sx={{ textAlign:"center", mt:2 }}>
         <Button
           variant="contained"
-          color="primary"
+          size="large"
           onClick={handleSave}
           disabled={saving}
-          sx={{ borderRadius: 2, fontWeight: 600, minWidth: 160 }}
         >
-          {saving ? "Saving..." : "Save My Ratings"}
+          {saving ? "Saving…" : "Save My Ratings"}
         </Button>
       </Box>
     </Container>
