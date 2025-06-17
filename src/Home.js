@@ -285,6 +285,33 @@ function Home() {
           )}
         </Box>
       </Paper>
+      {/* Ko-fi badge footer */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 4,
+            mb: 1,
+            opacity: 0.7,
+            position: { xs: 'static', sm: 'static' },
+            width: '100%',
+          }}
+        >
+          <a
+            href="https://ko-fi.com/X8X3DMF7V"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'inline-block' }}
+          >
+            <img
+              height="36"
+              style={{ border: 0, height: 36, boxShadow: "none" }}
+              src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
+              alt="Buy Me a Coffee at ko-fi.com"
+            />
+          </a>
+        </Box>
+
     </Container>
   );
 }
