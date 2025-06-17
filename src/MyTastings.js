@@ -92,14 +92,31 @@ function MyTastings() {
           where(documentId(), "==", user.uid)
         );
         const rSnap = await getDocs(rQ);
+
+        // DEBUG: print what user we're searching for
+        console.log("[MyTastings] Current user.uid:", user.uid);
+
+        // DEBUG: print all found response docs
+        rSnap.docs.forEach(d => {
+          console.log("[MyTastings] Found response doc:", d.ref.path, d.data());
+        });
+
         // extract unique tasting IDs
         const joinedIds = Array.from(
           new Set(
             rSnap.docs
-              .map((d) => d.ref.parent.parent?.id)
+              .map((d) => {
+                const tid = d.ref.parent.parent?.id;
+                if (!tid) console.warn("[MyTastings] Could not extract tasting ID from path", d.ref.path);
+                return tid;
+              })
               .filter((tid) => tid && !created.find((t) => t.id === tid))
           )
         );
+
+        // DEBUG: print found joined tasting IDs
+        console.log("[MyTastings] Joined tasting IDs:", joinedIds);
+
         // fetch each tasting doc
         for (let tid of joinedIds) {
           const tDoc = await getDoc(doc(db, "tastings", tid));
