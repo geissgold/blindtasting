@@ -8,11 +8,10 @@ import {
   collectionGroup,
   query,
   where,
-  documentId,
   getDocs,
   getDoc,
   deleteDoc,
-  doc
+  doc,
 } from "firebase/firestore";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -86,39 +85,36 @@ function MyTastings() {
 
       let joined = [];
       try {
-        // find all responses docs whose id === user.uid
-        const rQ = query(
-          collectionGroup(db, "responses"),
-          where(documentId(), "==", user.uid)
-        );
-        const rSnap = await getDocs(rQ);
-
-        // DEBUG: print what user we're searching for
-        console.log("[MyTastings] Current user.uid:", user.uid);
-
-        // DEBUG: print all found response docs
-        rSnap.docs.forEach(d => {
-          console.log("[MyTastings] Found response doc:", d.ref.path, d.data());
+        // Get all responses for all tastings, filter for this user
+        const allResponsesSnap = await getDocs(collectionGroup(db, "responses"));
+        // DEBUG: Print all found responses for inspection
+        allResponsesSnap.docs.forEach((docSnap) => {
+          if (docSnap.id === user.uid) {
+            console.log(
+              "[MyTastings] Found participant response:",
+              docSnap.ref.path,
+              docSnap.data()
+            );
+          }
         });
-
-        // extract unique tasting IDs
-        const joinedIds = Array.from(
+        // Find all tasting IDs where a response exists with the current user's UID
+        const joinedTastingIds = Array.from(
           new Set(
-            rSnap.docs
-              .map((d) => {
-                const tid = d.ref.parent.parent?.id;
-                if (!tid) console.warn("[MyTastings] Could not extract tasting ID from path", d.ref.path);
-                return tid;
+            allResponsesSnap.docs
+              .filter((docSnap) => docSnap.id === user.uid)
+              .map((docSnap) => {
+                // responses collection: /tastings/{tastingId}/responses/{userId}
+                return docSnap.ref.parent.parent?.id;
               })
-              .filter((tid) => tid && !created.find((t) => t.id === tid))
+              .filter(
+                (tid) => tid && !created.find((t) => t.id === tid)
+              )
           )
         );
+        // DEBUG: Print joinedTastingIds
+        console.log("[MyTastings] joinedTastingIds:", joinedTastingIds);
 
-        // DEBUG: print found joined tasting IDs
-        console.log("[MyTastings] Joined tasting IDs:", joinedIds);
-
-        // fetch each tasting doc
-        for (let tid of joinedIds) {
+        for (let tid of joinedTastingIds) {
           const tDoc = await getDoc(doc(db, "tastings", tid));
           if (tDoc.exists()) joined.push({ id: tDoc.id, ...tDoc.data() });
         }
