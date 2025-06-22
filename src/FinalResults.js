@@ -13,10 +13,10 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
+import Tooltip from "@mui/material/Tooltip"; // MUI Tooltip
 import Alert from "@mui/material/Alert";
 import { QRCodeCanvas } from "qrcode.react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
 import { useTheme } from "@mui/material/styles";
 
 
@@ -29,7 +29,6 @@ function FinalResults() {
   const [shareOpen, setShareOpen] = useState(false);
   const theme = useTheme();
   const axisTextColor = theme.palette.mode === "dark" ? "#fff" : "#222";
-
 
   useEffect(() => {
     async function fetchAll() {
@@ -89,8 +88,7 @@ function FinalResults() {
       </g>
     );
   }
-  
-  
+
   function CustomTooltip({ active, payload }) {
     if (active && payload && payload.length) {
       const d = payload[0].payload;
@@ -183,7 +181,6 @@ function FinalResults() {
   // --- FinalResults UI ---
   const shareLink = `https://tasting.hallofmirth.us/final/${tastingId}`;
 
-
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       {/* SHARE FINAL RESULTS */}
@@ -262,7 +259,7 @@ function FinalResults() {
                 tick={<CustomTick />}
               />
               <YAxis />
-              <Tooltip content={<CustomTooltip />} />
+              <ReTooltip content={<CustomTooltip />} />
               <Legend />
               <Bar dataKey="Average" fill="#1976d2">
                 <LabelList dataKey="Average" position="top" />
