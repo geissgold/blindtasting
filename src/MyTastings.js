@@ -257,6 +257,9 @@ function MyTastings() {
                             Results
                           </Button>
                         )}
+                          <Button size="small" onClick={() => navigate(`/myratings/${row.id}`)} sx={{ mr: 1 }}>
+                            My Ratings
+                          </Button>
                       </>
                     )}
                   </TableCell>

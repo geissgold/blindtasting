@@ -19,6 +19,7 @@ import JoinTasting from "./JoinTasting";
 import Results from "./Results";
 import FinalResults from "./FinalResults";
 import MyTastings from "./MyTastings";
+import MyRatings from "./MyRatings";
 import EmailLinkHandler from "./EmailLinkHandler"; // <--- NEW
 import { lightTheme, darkTheme } from "./themes"; // <-- import your themes
 
@@ -187,6 +188,7 @@ function App() {
             <Route path="/results/:tastingId" element={<Results />} />
             <Route path="/final/:tastingId" element={<FinalResults />} />
             <Route path="/my-tastings" element={<MyTastings />} />
+            <Route path="/myratings/:tastingId" element={<MyRatings />} />
           </Routes>
         </Container>
       </Router>
