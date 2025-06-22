@@ -62,6 +62,49 @@ function FinalResults() {
   }, [copySuccess]);
 
   // Tabulate results for chart and CSV
+  function CustomTick(props) {
+    const { x, y, payload } = props;
+    const text = payload.value;
+    const isTop = payload.payload && payload.payload.isTop;
+    const short = text.length > 16 ? text.slice(0, 14) + "…" : text;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <title>{text}</title>
+        <text
+          textAnchor="end"
+          transform="rotate(-35)"
+          fontSize={12}
+          fill="#222"
+          style={{ cursor: "pointer" }}
+        >
+          {isTop && "🏆 "}
+          {short}
+        </text>
+      </g>
+    );
+  }
+  
+  function CustomTooltip({ active, payload }) {
+    if (active && payload && payload.length) {
+      const d = payload[0].payload;
+      return (
+        <div style={{
+          background: "#fff", border: "1px solid #bbb",
+          padding: 10, borderRadius: 8, minWidth: 180, color: "#222"
+        }}>
+          <b>
+            {d.isTop && <span role="img" aria-label="winner">🏆 </span>}
+            {d.name}
+          </b>
+          <div>Average: <b>{d.Average}</b></div>
+          <div>Votes: <b>{d.Votes}</b></div>
+          <div>Item #: {d.number}</div>
+        </div>
+      );
+    }
+    return null;
+  }
+
   function computeResults() {
     if (!responses.length || !tasting) return [];
     const items = Array.from({ length: tasting.numItems }, (_, idx) => ({
@@ -77,11 +120,13 @@ function FinalResults() {
     return items.sort((a, b) => b.avg - a.avg);
   }
 
-  const chartData = computeResults().map(item => ({
+  const chartData = results.map(item => ({
+    // No emoji here, just plain name!
     name: item.name || `Item ${item.number}`,
     Average: Number(item.avg.toFixed(2)),
     Votes: item.votes,
     number: item.number,
+    isTop: item.name === topItemName
   }));
 
   // --- CSV download ---
