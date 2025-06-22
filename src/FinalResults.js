@@ -127,6 +127,9 @@ function FinalResults() {
     return items.sort((a, b) => b.avg - a.avg);
   }
 
+  const results = computeResults();
+  const topItemName = results.length ? results[0].name : "";
+
   const chartData = results.map(item => ({
     // No emoji here, just plain name!
     name: item.name || `Item ${item.number}`,
