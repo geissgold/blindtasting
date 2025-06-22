@@ -113,6 +113,8 @@ function MyTastings() {
         );
         // DEBUG: Print joinedTastingIds
         console.log("[MyTastings] joinedTastingIds:", joinedTastingIds);
+        console.log("Current Firebase UID:", user.uid);
+        console.log("Current Email:", user.email);
 
         for (let tid of joinedTastingIds) {
           const tDoc = await getDoc(doc(db, "tastings", tid));
