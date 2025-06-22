@@ -112,7 +112,7 @@ function Results() {
   function CustomTick(props) {
     const { x, y, payload } = props;
     const text = payload.value;
-    // Truncate if >16 chars
+    const isTop = payload.payload && payload.payload.isTop;
     const short = text.length > 16 ? text.slice(0, 14) + "…" : text;
     return (
       <g transform={`translate(${x},${y})`}>
@@ -124,22 +124,26 @@ function Results() {
           fill="#222"
           style={{ cursor: "pointer" }}
         >
+          {isTop && "🏆 "}
           {short}
         </text>
       </g>
     );
   }
+  
 
-  function CustomTooltip({ active, payload, label }) {
+  function CustomTooltip({ active, payload }) {
     if (active && payload && payload.length) {
-      // payload[0].payload has: name, Average, Votes, number, etc.
       const d = payload[0].payload;
       return (
         <div style={{
           background: "#fff", border: "1px solid #bbb",
           padding: 10, borderRadius: 8, minWidth: 180
         }}>
-          <b>{d.name}</b>
+          <b>
+            {d.isTop && <span role="img" aria-label="winner">🏆 </span>}
+            {d.name}
+          </b>
           <div>Average: <b>{d.Average}</b></div>
           <div>Votes: <b>{d.Votes}</b></div>
           <div>Item #: {d.number}</div>
@@ -148,6 +152,7 @@ function Results() {
     }
     return null;
   }
+  
     
   function computeResults() {
     if (!responses.length || !tasting) return [];
@@ -169,11 +174,14 @@ function Results() {
   const topItemName = results.length ? results[0].name : "";
 
   const chartData = results.map(item => ({
-    name: (item.name === topItemName ? `🏆 ${item.name}` : item.name) || `Item ${item.number}`,
+    // No emoji here, just plain name!
+    name: item.name || `Item ${item.number}`,
     Average: Number(item.avg.toFixed(2)),
     Votes: item.votes,
     number: item.number,
+    isTop: item.name === topItemName
   }));
+  
 
   if (loading) return <Container><CircularProgress /></Container>;
   if (!tasting) {
