@@ -255,9 +255,14 @@ function FinalResults() {
               margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis
+                dataKey="name"
+                height={55}
+                interval={0}
+                tick={<CustomTick />}
+              />
               <YAxis />
-              <ReTooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Bar dataKey="Average" fill="#1976d2">
                 <LabelList dataKey="Average" position="top" />
