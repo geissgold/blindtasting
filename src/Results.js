@@ -138,7 +138,7 @@ function Results() {
       return (
         <div style={{
           background: "#fff", border: "1px solid #bbb",
-          padding: 10, borderRadius: 8, minWidth: 180
+          padding: 10, borderRadius: 8, minWidth: 180, color: "#222"
         }}>
           <b>
             {d.isTop && <span role="img" aria-label="winner">🏆 </span>}
