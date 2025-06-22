@@ -17,6 +17,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Alert from "@mui/material/Alert";
 import { QRCodeCanvas } from "qrcode.react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
+import { useTheme } from "@mui/material/styles";
+
 
 function FinalResults() {
   const { tastingId } = useParams();
@@ -25,6 +27,9 @@ function FinalResults() {
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const theme = useTheme();
+  const axisTextColor = theme.palette.mode === "dark" ? "#fff" : "#222";
+
 
   useEffect(() => {
     async function fetchAll() {
@@ -67,6 +72,7 @@ function FinalResults() {
     const text = payload.value;
     const isTop = payload.payload && payload.payload.isTop;
     const short = text.length > 16 ? text.slice(0, 14) + "…" : text;
+    // Use axisTextColor
     return (
       <g transform={`translate(${x},${y})`}>
         <title>{text}</title>
@@ -74,7 +80,7 @@ function FinalResults() {
           textAnchor="end"
           transform="rotate(-35)"
           fontSize={12}
-          fill="#222"
+          fill={axisTextColor}
           style={{ cursor: "pointer" }}
         >
           {isTop && "🏆 "}
@@ -83,6 +89,7 @@ function FinalResults() {
       </g>
     );
   }
+  
   
   function CustomTooltip({ active, payload }) {
     if (active && payload && payload.length) {

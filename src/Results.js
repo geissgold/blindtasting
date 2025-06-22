@@ -18,6 +18,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LabelList, ResponsiveContainer } from "recharts";
 import Link from "@mui/material/Link";
+import { useTheme } from "@mui/material/styles";
+
 
 function Results() {
   const { tastingId } = useParams();
@@ -29,6 +31,9 @@ function Results() {
   const [loading, setLoading] = useState(true);
   const [notCreator, setNotCreator] = useState(false);
   const [justClosed, setJustClosed] = useState(false);
+  const theme = useTheme();
+  const axisTextColor = theme.palette.mode === "dark" ? "#fff" : "#222";
+
 
   // Auth listener
   useEffect(() => {
@@ -114,6 +119,7 @@ function Results() {
     const text = payload.value;
     const isTop = payload.payload && payload.payload.isTop;
     const short = text.length > 16 ? text.slice(0, 14) + "…" : text;
+    // Use axisTextColor
     return (
       <g transform={`translate(${x},${y})`}>
         <title>{text}</title>
@@ -121,7 +127,7 @@ function Results() {
           textAnchor="end"
           transform="rotate(-35)"
           fontSize={12}
-          fill="#222"
+          fill={axisTextColor}
           style={{ cursor: "pointer" }}
         >
           {isTop && "🏆 "}
@@ -131,7 +137,6 @@ function Results() {
     );
   }
   
-
   function CustomTooltip({ active, payload }) {
     if (active && payload && payload.length) {
       const d = payload[0].payload;
