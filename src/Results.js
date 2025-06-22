@@ -109,6 +109,46 @@ function Results() {
   };
 
   // Tabulate results
+  function CustomTick(props) {
+    const { x, y, payload } = props;
+    const text = payload.value;
+    // Truncate if >16 chars
+    const short = text.length > 16 ? text.slice(0, 14) + "…" : text;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <title>{text}</title>
+        <text
+          textAnchor="end"
+          transform="rotate(-35)"
+          fontSize={12}
+          fill="#222"
+          style={{ cursor: "pointer" }}
+        >
+          {short}
+        </text>
+      </g>
+    );
+  }
+
+  function CustomTooltip({ active, payload, label }) {
+    if (active && payload && payload.length) {
+      // payload[0].payload has: name, Average, Votes, number, etc.
+      const d = payload[0].payload;
+      return (
+        <div style={{
+          background: "#fff", border: "1px solid #bbb",
+          padding: 10, borderRadius: 8, minWidth: 180
+        }}>
+          <b>{d.name}</b>
+          <div>Average: <b>{d.Average}</b></div>
+          <div>Votes: <b>{d.Votes}</b></div>
+          <div>Item #: {d.number}</div>
+        </div>
+      );
+    }
+    return null;
+  }
+    
   function computeResults() {
     if (!responses.length || !tasting) return [];
     const items = Array.from({ length: tasting.numItems }, (_, idx) => ({
@@ -209,18 +249,24 @@ function Results() {
           <ResponsiveContainer width="100%" height={350}>
             <BarChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 0, bottom: 45 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis
+                dataKey="name"
+                height={55}
+                interval={0}
+                tick={<CustomTick />}
+              />
               <YAxis />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Bar dataKey="Average" fill="#1976d2">
                 <LabelList dataKey="Average" position="top" />
               </Bar>
               <Bar dataKey="Votes" fill="#43a047" />
             </BarChart>
+
           </ResponsiveContainer>
         ) : (
           <Typography>No responses yet.</Typography>
