@@ -20,15 +20,14 @@ import Results from "./Results";
 import FinalResults from "./FinalResults";
 import MyTastings from "./MyTastings";
 import MyRatings from "./MyRatings";
-import EmailLinkHandler from "./EmailLinkHandler"; // <--- NEW
-import { lightTheme, darkTheme } from "./themes"; // <-- import your themes
+import EmailLinkHandler from "./EmailLinkHandler";
+import { lightTheme, darkTheme } from "./themes";
 
 function ResponsiveHeader({ darkMode, setDarkMode }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [qrOpen, setQROpen] = useState(false);
 
-  // Set your public home URL here for QR code (can be window.location.origin if you always deploy at root)
   const homeUrl = "https://tasting.hallofmirth.us/";
 
   const handleOpenQR = () => setQROpen(true);
@@ -103,13 +102,29 @@ function ResponsiveHeader({ darkMode, setDarkMode }) {
                 style={{
                   textDecoration: "none",
                   color: theme.palette.primary.main,
+                  marginRight: isMobile ? 0 : 18,
                   fontWeight: 500,
+                  marginBottom: isMobile ? 4 : 0,
                   fontSize: "1.07rem"
                 }}
               >
                 My Tastings
               </Link>
-              {/* Share Home QR Icon */}
+              <a
+                href="https://github.com/geissgold/blindtasting#readme"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: "none",
+                  color: theme.palette.primary.main,
+                  fontWeight: 500,
+                  marginRight: isMobile ? 0 : 18,
+                  marginBottom: isMobile ? 4 : 0,
+                  fontSize: "1.07rem"
+                }}
+              >
+                View README
+              </a>
               <Tooltip title="Share Home Page">
                 <IconButton
                   onClick={handleOpenQR}
@@ -121,7 +136,6 @@ function ResponsiveHeader({ darkMode, setDarkMode }) {
                   <QrCode2Icon />
                 </IconButton>
               </Tooltip>
-              {/* Toggle theme button */}
               <button
                 style={{
                   marginLeft: isMobile ? 0 : 18,
@@ -141,7 +155,6 @@ function ResponsiveHeader({ darkMode, setDarkMode }) {
           </Stack>
         </Container>
       </Box>
-      {/* Home Page QR Dialog */}
       <Dialog open={qrOpen} onClose={handleCloseQR}>
         <DialogTitle>Share Home Page</DialogTitle>
         <DialogContent sx={{ textAlign: "center" }}>
@@ -178,7 +191,6 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {/* MAGIC LINK HANDLER */}
         <EmailLinkHandler />
         <ResponsiveHeader darkMode={darkMode} setDarkMode={setDarkMode} />
         <Container maxWidth="md">
