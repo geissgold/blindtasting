@@ -61,7 +61,7 @@ function Home() {
         return;
       }
       await sendSignInLinkToEmail(auth, email, {
-        url: window.location.origin, // Use your deployed app's root URL
+        url: window.location.origin,
         handleCodeInApp: true
       });
       window.localStorage.setItem("emailForSignIn", email);
@@ -150,6 +150,9 @@ function Home() {
                   </IconButton>
                 </DialogTitle>
                 <DialogContent sx={{ pb: 1 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
+                    After clicking the button below, check your inbox for a "magic link." To complete sign-in, open that link in the <strong>same browser you used to request it</strong>. In-app email viewers or a different browser might not work properly.
+                  </Typography>
                   <TextField
                     label="Email Address"
                     type="email"
@@ -205,8 +208,6 @@ function Home() {
                   </Button>
                 </Stack>
               </Stack>
-
-              {/* Create New Tasting Section */}
               <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
                 Create a New Tasting
               </Typography>
@@ -247,8 +248,6 @@ function Home() {
                   {creating ? "Creating..." : "Create"}
                 </Button>
               </Box>
-
-              {/* Share Tasting QR */}
               {createdTasting && (
                 <Box mt={4} textAlign="center">
                   <Typography variant="subtitle1" gutterBottom>
@@ -275,7 +274,6 @@ function Home() {
                       {tastingLink}
                     </a>
                   </Typography>
-
                   <Box mt={2} display="flex" justifyContent="center">
                     <QRCodeCanvas value={tastingLink} size={128} />
                   </Box>
@@ -285,33 +283,31 @@ function Home() {
           )}
         </Box>
       </Paper>
-      {/* Ko-fi badge footer */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            mt: 4,
-            mb: 1,
-            opacity: 0.7,
-            position: { xs: 'static', sm: 'static' },
-            width: '100%',
-          }}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          mt: 4,
+          mb: 1,
+          opacity: 0.7,
+          position: { xs: 'static', sm: 'static' },
+          width: '100%',
+        }}
+      >
+        <a
+          href="https://ko-fi.com/X8X3DMF7V"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: 'inline-block' }}
         >
-          <a
-            href="https://ko-fi.com/X8X3DMF7V"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'inline-block' }}
-          >
-            <img
-              height="36"
-              style={{ border: 0, height: 36, boxShadow: "none" }}
-              src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
-              alt="Buy Me a Coffee at ko-fi.com"
-            />
-          </a>
-        </Box>
-
+          <img
+            height="36"
+            style={{ border: 0, height: 36, boxShadow: "none" }}
+            src="https://storage.ko-fi.com/cdn/kofi3.png?v=6"
+            alt="Buy Me a Coffee at ko-fi.com"
+          />
+        </a>
+      </Box>
     </Container>
   );
 }
