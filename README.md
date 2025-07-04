@@ -1,4 +1,4 @@
-# Blind Tasting App 🍷
+# Blind Tasting App 🍷 - by !!G
 
 A simple, elegant web app for running blind tastings—designed for wine, coffee, spirits, or anything you want to rate as a group.  
 **Live App:** [https://tasting.hallofmirth.us](https://tasting.hallofmirth.us)
@@ -8,8 +8,9 @@ A simple, elegant web app for running blind tastings—designed for wine, coffee
 - Create a new tasting event, set the number of items, and instantly get a join code + QR code.
 - Participants rate each item on a scale (with private notes).
 - Host sees results, can add item names for the “reveal,” and can download data.
-- Participants can also download their results.
-- Google sign-in for privacy and simplicity.
+- Participants can see final results and download them if desired.
+- Participants can see their own scores and notes.
+- Google sign-in for privacy and simplicity. Email sign-in provided (pay attention to the instructions!)
 - Works perfectly on mobile or desktop.
 
 ---
@@ -27,9 +28,10 @@ A simple, elegant web app for running blind tastings—designed for wine, coffee
 ### 2. Tasters: Join and Rate
 
 1. Visit the link or scan the QR code (works on any phone).
-2. Sign in with Google.
-3. Rate each item and add private notes if you wish.
-4. Click **Save My Ratings** at any time.  
+2. Sign in with Google (or email method).
+3. Tasters can help other guests join via **code, link or QR code** as they arrive!
+4. Rate each item and add private notes if you wish.
+5. Click **Save My Ratings** at any time (recommended to ensure your scores keep!).  
    - You can come back and edit until the host closes the tasting.
 
 ### 3. Host: Reveal & Results
@@ -37,11 +39,13 @@ A simple, elegant web app for running blind tastings—designed for wine, coffee
 1. When everyone’s done, go to the event’s results page (from “My Tastings”).
 2. Add item names for the reveal (optional, but fun!).
 3. **Close the tasting** to finalize results.
-4. Download results as CSV, or share the results link or QR code for participants.
+4. Display the results for your guests from your phone or a PC!
+5. Download results as CSV, or share the results link or QR code for participants.
 
 ### 4. Participants: Download Results
 
 - After the host closes the tasting, you can revisit the event link to see and download the final results.
+- You can revisit your past tastings (whether you were a host or participant) and see your scores/notes.
 
 ---
 
@@ -54,10 +58,6 @@ A simple, elegant web app for running blind tastings—designed for wine, coffee
 ### Are my ratings private?
 
 > Only you and the host can see your ratings; your notes are never public.
-
-### What if I lose the link?
-
-> Ask your host to get the QR code or link again from the “My Tastings” menu.
 
 ### Can I delete or revisit past tastings?
 
